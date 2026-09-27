@@ -11,7 +11,7 @@ derecho constitucional (artículo 23) y la entidad tiene un plazo legal para res
 
 | Entidad | Canal | Por qué |
 |---|---|---|
-| Secretaría Distrital de Seguridad, Convivencia y Justicia (Oficina de Análisis de Información y Estudios Estratégicos, OAIEE) | **Bogotá te escucha** (sistema distrital de peticiones) o el canal de atención de la Secretaría | Publica las cifras de Bogotá y administra el servidor de mapas donde están |
+| Secretaría Distrital de Seguridad, Convivencia y Justicia (Oficina de Análisis de Información y Estudios Estratégicos, OAIEE) | **Bogotá te escucha**, el sistema distrital de peticiones: [registrar petición](https://www.alcaldiabogota.gov.co/sdqs/publico/registrarPeticion/) (eliges la Secretaría de Seguridad como entidad) | Publica las cifras de Bogotá y administra el servidor de mapas donde están |
 | Policía Nacional (DIJIN, estadística delictiva / SIEDCO) | Canal de peticiones de la Policía Nacional, o el correo que la Policía indica para solicitudes estadísticas: `dijin.aicri-jef@policia.gov.co` | Es la dueña del sistema SIEDCO, de donde salen los datos |
 
 **Plazo de respuesta:** 10 días hábiles para solicitudes de información y documentos (Ley 1755 de

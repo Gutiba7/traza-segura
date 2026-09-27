@@ -29,20 +29,22 @@ posterior se vea de inmediato en tu celular. Es más motivador y detecta problem
 
 ## Fase 1 — Datos de delitos (3–5 días)
 
-**Objetivo:** tener una tabla limpia de delitos con ubicación, fecha, hora y tipo.
+**Objetivo:** tener una tabla limpia de delitos por zona (o por punto, si se consigue), con fecha,
+tipo y, si existe, franja horaria.
 
 | # | Paso | ✅ Verificación |
 |---|---|---|
-| 1.1 | Inventario de fuentes: listar los servicios ArcGIS REST de la SDSCJ y los conjuntos de Datos Abiertos Bogotá; anotar qué campos trae cada uno, licencia y fecha de actualización. | Documento `docs/fuentes.md` con una tabla legible. |
-| 1.2 | **Decisión clave:** ¿los delitos vienen como puntos (cada hecho con coordenadas) o como totales por zona (localidad/UPZ/cuadrante)? Esto define la precisión de todo lo demás. | Te explico el hallazgo y decidimos juntos. |
-| 1.3 | Script de descarga que pida los datos por páginas (los servicios ArcGIS entregan máximo ~1.000–2.000 registros por consulta) y los guarde. | Número total de registros descargados coincide con el que reporta el servicio. |
-| 1.4 | Limpieza: quitar duplicados, registros sin ubicación o fuera de Bogotá, unificar nombres de delitos. | Reporte: "X registros originales → Y válidos", con motivos de descarte. |
-| 1.5 | Tabla de pesos por tipo de delito para peatones (ej. hurto a personas = 1,0; lesiones = 0,9; hurto de autopartes = 0,2). | Tabla en `docs/pesos.md` que tú apruebas o ajustas. |
-| 1.6 | Mapa de prueba con los puntos/zonas sobre Bogotá. | Ves el mapa y los datos caen donde deben (no en el mar ni en Villavicencio). |
+| 1.1 | ✅ **Hecho.** Inventario de fuentes: servidor ArcGIS de la Secretaría, Datos Abiertos Bogotá, Policía Nacional en datos.gov.co y capas complementarias (siniestros viales, alumbrado, ciclorrutas, seguridad nocturna). | [`docs/fuentes.md`](docs/fuentes.md) y el script `pipeline/explorar_fuentes.py`. |
+| 1.2 | **Decisión clave:** elegir la zona más pequeña disponible con datos al día. Los datos oficiales publicados vienen por zona, no como puntos (ver `docs/fuentes.md`). | Te explico el hallazgo y decidimos juntos. |
+| 1.3 | Script de descarga desde **Datos Abiertos Bogotá** (archivos mensuales). El servidor ArcGIS de la Secretaría no responde desde fuera de Colombia, así que la actualización automática no puede depender de él. | Los totales descargados coinciden con los que publica la Secretaría en sus boletines. |
+| 1.4 | Limpieza: unificar nombres de delitos y de zonas, revisar zonas sin datos y cortes de fecha. | Reporte: "X registros originales → Y válidos", con motivos de descarte. |
+| 1.5 | Tabla de pesos por tipo de delito **para cada modo** (a pie, bici, carro). | Tabla en `docs/pesos.md` que tú apruebas o ajustas. |
+| 1.6 | Mapa de prueba con las zonas coloreadas sobre Bogotá. | Ves el mapa y los datos caen donde deben (no en el mar ni en Villavicencio). |
+| 1.7 | *(En paralelo)* Enviar el [derecho de petición](docs/derecho-de-peticion.md) para pedir datos más detallados (por cuadrante o por punto, con hora). | Radicado de la petición; respuesta en 10 días hábiles. |
+| 1.8 | *(En paralelo)* Abrir desde Colombia el servicio `SIEDCO_Delitos_Pub` para ver si trae más detalle que los archivos abiertos. | Captura de pantalla de la lista de capas. |
 
-**Riesgo conocido:** la red de este entorno de trabajo bloquea hoy `datosabiertos.bogota.gov.co`.
-La descarga definitiva correrá en GitHub Actions (que sí tiene internet abierto); para
-desarrollar necesito que se habilite ese dominio (ver "Qué necesito de ti").
+🧑 Pasos 1.7 y 1.8: los haces tú desde Colombia (te dejo todo listo). Si traen datos más finos, se
+integran sin cambiar el resto del plan.
 
 ---
 
