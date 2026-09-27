@@ -16,8 +16,21 @@ permissions:
 jobs:
   explorar:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
+      - name: Diagnóstico de conexión con los servidores del Distrito
+        continue-on-error: true
+        run: |
+          getent ahosts oaiee.scj.gov.co || echo "DNS: sin respuesta"
+          for url in \
+            "https://oaiee.scj.gov.co/agc/rest/services?f=json" \
+            "http://oaiee.scj.gov.co/agc/rest/services?f=json" \
+            "https://scj.gov.co/" \
+            "https://mapas.bogota.gov.co/" \
+            "https://serviciosgis.catastrobogota.gov.co/arcgis/rest/services?f=json" \
+            "https://datosabiertos.bogota.gov.co/"; do
+            curl -4 -sS -m 25 -o /dev/null -w "HTTP %{http_code} en %{time_total}s  $url\n" "$url" || echo "SIN CONEXIÓN  $url"
+          done
       - name: Inventariar fuentes
         run: python3 pipeline/explorar_fuentes.py
