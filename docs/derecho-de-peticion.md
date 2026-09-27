@@ -1,7 +1,8 @@
 # Borrador: derecho de petición para obtener datos de delitos más detallados
 
 **Para qué sirve:** los datos abiertos de delitos de Bogotá vienen agrupados por zonas (ver
-[fuentes.md](fuentes.md)). Con un derecho de petición podemos pedir a las autoridades datos más
+[fuentes.md](fuentes.md)). La Secretaría sí tiene el detalle por sector catastral y un servicio
+del SIEDCO más completo, pero hoy no son públicos. Con un derecho de petición podemos pedir a las autoridades datos más
 finos, por ejemplo por cuadrante de policía, por manzana o con la hora del hecho. Es gratis, es un
 derecho constitucional (artículo 23) y la entidad tiene un plazo legal para responder.
 
@@ -48,6 +49,12 @@ derecho de acceso a la información pública (Ley 1712 de 2014), solicito respet
 4. Si no es posible entregar el detalle por hecho, solicito subsidiariamente el **conteo mensual
    por cuadrante de policía (o por manzana), tipo de delito y franja horaria** para el mismo periodo.
 5. Que la información se entregue en formato digital abierto (CSV, GeoJSON o Shapefile).
+6. En particular, que se publiquen nuevamente o se me entreguen las capas de delitos de alto
+   impacto **por UPZ y por sector catastral** del servicio de mapas de la Secretaría
+   (`Tematicos_Pub/CifrasSCJ`, capas 1 y 6), que no aparecen en la versión pública actual,
+   actualizadas a la fecha de corte más reciente.
+7. Que se me informe si es posible obtener acceso de consulta, o una exportación periódica, del
+   servicio `Tematicos_Pub/SIEDCO_Delitos_Pub`, que hoy requiere usuario de la entidad.
 
 **Finalidad:** la información se usará en *Traza Segura*, un proyecto ciudadano sin ánimo de lucro
 que calcula rutas más seguras para caminar, ir en bicicleta o en carro por Bogotá. Los datos se

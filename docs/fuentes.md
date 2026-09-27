@@ -138,6 +138,19 @@ cambio, Datos Abiertos Bogotá, Mapas Bogotá e IDECA sí responden desde el mis
 - Si `SIEDCO_Delitos_Pub` trae más detalle que los archivos abiertos, solo se puede ver desde
   Colombia (paso 1.8 del PLAN).
 
+**Revisión desde Colombia (paso 1.8, 27 de septiembre de 2026):**
+
+- ✅ `CifrasSCJ` publica hoy las capas 0 (delitos de alto impacto por localidad), 2, 3 y 7
+  (incidentes reportados por localidad, UPZ y sector catastral) y 4, 5 y 8 (comparendos del Código
+  de Policía por localidad, UPZ y sector catastral). Es lo mismo que ya usamos de Datos Abiertos.
+- ⚠️ **Faltan las capas 1 y 6.** Por el patrón de las demás (localidad, UPZ, sector catastral),
+  todo indica que eran los delitos de alto impacto por UPZ y por sector catastral, que se
+  publicaban hasta 2022 y hoy no son públicos.
+- ⚠️ `SIEDCO_Delitos_Pub` **pide iniciar sesión** en el portal propio de la Secretaría. Una cuenta
+  personal de Esri no sirve: es un servicio restringido a usuarios de la entidad.
+- Conclusión: el detalle de delitos por zona pequeña **existe**, pero no es público. El derecho de
+  petición ahora puede pedir exactamente esas capas.
+
 ## Qué significa para Traza Segura (decisión del paso 1.2)
 
 Aprobada tras revisarla y comprobar sus supuestos con los datos. El detalle matemático y la
@@ -162,5 +175,4 @@ evidencia están en [metodologia.md](metodologia.md). En resumen:
 - Si las llamadas por "vehículo hurtado" y "violencia sexual" (por UPZ) siguen el patrón de las
   denuncias de robo de motos, robo de carros y delitos sexuales.
 - Periodo y licencia de los hexágonos de robo de bicicletas.
-- Contenido real de `SIEDCO_Delitos_Pub` y de `CifrasSCJ` (solo visibles desde Colombia).
 - Si existe una versión de siniestros viales posterior a 2021.

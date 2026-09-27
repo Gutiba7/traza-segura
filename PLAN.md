@@ -41,10 +41,10 @@ tipo y, si existe, franja horaria.
 | 1.5 | Tabla de pesos por tipo de delito **para cada modo** (a pie, bici, carro). | Tabla en `docs/pesos.md` que tú apruebas o ajustas. |
 | 1.6 | Mapa de prueba con las zonas coloreadas sobre Bogotá. | Ves el mapa y los datos caen donde deben (no en el mar ni en Villavicencio). |
 | 1.7 | *(En paralelo)* Enviar el [derecho de petición](docs/derecho-de-peticion.md) para pedir datos más detallados (por cuadrante o por punto, con hora). | Radicado de la petición; respuesta en 10 días hábiles. |
-| 1.8 | *(En paralelo)* Abrir desde Colombia los servicios `SIEDCO_Delitos_Pub` y `CifrasSCJ` para ver si traen más detalle que los archivos abiertos. | Captura de pantalla de la lista de capas. |
+| 1.8 | ✅ **Hecho.** `CifrasSCJ` tiene lo mismo que Datos Abiertos, pero le faltan las capas 1 y 6 (probablemente delitos por UPZ y por sector catastral, ya no públicos). `SIEDCO_Delitos_Pub` exige usuario de la Secretaría. | Captura revisada; hallazgos en `docs/fuentes.md`. |
 
-🧑 Pasos 1.7 y 1.8: los haces tú desde Colombia (te dejo todo listo). Si traen datos más finos, se
-integran sin cambiar el resto del plan.
+🧑 Paso 1.7: lo radicas tú (necesita tu nombre y cédula). Si trae datos más finos, se integran sin
+cambiar el resto del plan.
 
 ---
 
