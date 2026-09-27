@@ -67,6 +67,11 @@ function coloresPara(k: number): string[] {
   return Array.from({ length: k }, (_, i) => RAMPA[Math.round((i * (RAMPA.length - 1)) / (k - 1))]);
 }
 
+/** Índice de la clase (0 = la más clara) a la que pertenece un valor. */
+export function claseDe(valor: number, cortes: number[]): number {
+  return cortes.filter((corte) => valor >= corte).length;
+}
+
 /** Números con separador de miles colombiano (1.200). */
 export function numero(valor: number): string {
   return Math.round(valor).toLocaleString("es-CO");

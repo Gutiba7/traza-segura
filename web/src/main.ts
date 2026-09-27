@@ -1,3 +1,5 @@
+import "@fontsource-variable/fraunces";
+import "@fontsource-variable/ibm-plex-sans";
 import type { FeatureCollection, Geometry } from "geojson";
 import { AttributionControl, Map as Mapa, NavigationControl, setWorkerUrl, type MapLayerMouseEvent } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
@@ -5,13 +7,15 @@ import "maplibre-gl/dist/maplibre-gl.css";
 // archivo por separado y MapLibre necesita saber dónde quedó; sin esto, el mapa no se dibuja.
 import urlWorker from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
 import "./estilo.css";
-import { BOGOTA, clasificar, etiquetas, expresionColor, numero, type Clases } from "./escala";
+import { BOGOTA, claseDe, clasificar, etiquetas, expresionColor, numero, type Clases } from "./escala";
 
-// Mapa base gratuito y sin clave, hecho con datos de OpenStreetMap.
-const ESTILO_BASE = "https://tiles.openfreemap.org/styles/liberty";
+// Mapa base en grises, gratuito y sin clave, hecho con datos de OpenStreetMap: deja que los datos resalten.
+const ESTILO_BASE = "https://tiles.openfreemap.org/styles/positron";
 const DATOS = `${import.meta.env.BASE_URL}data`;
 const PROPIEDAD = "hurtos_km2";
-const OPACIDAD = 0.65;
+const OPACIDAD = 0.72;
+const TINTA = "#14213d";
+const celular = window.matchMedia("(max-width: 720px)");
 
 interface Sector {
   id: string;
@@ -26,6 +30,8 @@ interface Meta {
   fuente: string;
 }
 
+const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
+
 setWorkerUrl(urlWorker);
 
 const mapa = new Mapa({
@@ -39,19 +45,17 @@ const mapa = new Mapa({
 mapa.addControl(new NavigationControl({ showCompass: false }), "top-right");
 mapa.addControl(new AttributionControl({ compact: true }), "bottom-right");
 
+activarHoja();
+
 mapa.on("load", async () => {
-  const leyenda = document.getElementById("leyenda")!;
   let sectores: FeatureCollection<Geometry, Sector>;
   try {
     const [respuesta, meta] = await Promise.all([fetch(`${DATOS}/sectores.geojson`), leerMeta()]);
     if (!respuesta.ok) throw new Error(`HTTP ${respuesta.status}`);
     sectores = await respuesta.json();
-    if (meta) {
-      document.getElementById("anio")!.textContent = String(meta.anio);
-      document.getElementById("fuente")!.textContent = `Fuente: ${meta.fuente}.`;
-    }
+    if (meta) $("anio").textContent = String(meta.anio);
   } catch {
-    leyenda.textContent = "Los datos todavía no están disponibles en esta versión.";
+    $("escala").innerHTML = '<p class="cargando">No se pudieron cargar los datos. Intenta de nuevo más tarde.</p>';
     return;
   }
 
@@ -79,14 +83,20 @@ mapa.on("load", async () => {
       type: "line",
       source: "sectores",
       paint: {
-        "line-color": ["case", ["boolean", ["feature-state", "activo"], false], "#0b0b0b", "#ffffff"],
-        "line-width": ["case", ["boolean", ["feature-state", "activo"], false], 2, 0.5],
+        "line-color": ["case", ["boolean", ["feature-state", "activo"], false], TINTA, "#ffffff"],
+        "line-width": ["case", ["boolean", ["feature-state", "activo"], false], 2, 0.35],
       },
     },
     debajoDe,
   );
-  dibujarLeyenda(leyenda, clases);
-  activarDetalle();
+
+  dibujarEscala(clases);
+  $("cifra-sectores").textContent = numero(sectores.features.length);
+  $("cifra-llamadas").textContent = numero(sectores.features.reduce((suma, f) => suma + f.properties.hurtos, 0));
+  medirHoja();
+  activarFicha(clases);
+  // En el celular los créditos arrancan plegados en el botón (i): están también en el panel.
+  if (celular.matches) document.querySelector(".maplibregl-ctrl-attrib")?.classList.remove("maplibregl-compact-show");
 });
 
 async function leerMeta(): Promise<Meta | null> {
@@ -98,56 +108,92 @@ async function leerMeta(): Promise<Meta | null> {
   }
 }
 
-function dibujarLeyenda(contenedor: HTMLElement, clases: Clases): void {
-  contenedor.replaceChildren(
-    ...etiquetas(clases.cortes).map((texto, i) => {
-      const fila = document.createElement("div");
-      fila.className = "leyenda-fila";
-      fila.setAttribute("role", "listitem");
-      const muestra = document.createElement("span");
-      muestra.className = "muestra";
-      muestra.style.backgroundColor = clases.colores[i];
-      muestra.style.opacity = String(OPACIDAD);
-      const etiqueta = document.createElement("span");
-      etiqueta.textContent = texto;
-      fila.append(muestra, etiqueta);
-      return fila;
+/** Escala en barra: un tramo por clase y, debajo, los valores donde cambia de color. */
+function dibujarEscala(clases: Clases): void {
+  const textos = etiquetas(clases.cortes);
+  const barra = document.createElement("div");
+  barra.className = "escala-barra";
+  barra.setAttribute("role", "list");
+  barra.append(
+    ...clases.colores.map((color, i) => {
+      const tramo = document.createElement("span");
+      tramo.className = "escala-tramo";
+      tramo.dataset.clase = String(i);
+      tramo.style.backgroundColor = color;
+      tramo.style.opacity = String(OPACIDAD);
+      tramo.setAttribute("role", "listitem");
+      tramo.setAttribute("aria-label", `${textos[i]} llamadas por km²`);
+      return tramo;
     }),
   );
+  const valores = document.createElement("div");
+  valores.className = "escala-valores";
+  valores.setAttribute("aria-hidden", "true");
+  valores.style.setProperty("--clases", String(clases.colores.length));
+  valores.append(
+    ...clases.cortes.map((corte, i) => {
+      const valor = document.createElement("span");
+      valor.style.gridColumn = String(i + 2);
+      valor.textContent = numero(corte);
+      return valor;
+    }),
+  );
+  const extremos = document.createElement("div");
+  extremos.className = "escala-extremos";
+  extremos.setAttribute("aria-hidden", "true");
+  extremos.innerHTML = "<span>Menos llamadas</span><span>Más llamadas</span>";
+  $("escala").replaceChildren(barra, valores, extremos);
 }
 
-/** Muestra el detalle de un sector al pasar el mouse o al tocarlo en el celular. */
-function activarDetalle(): void {
-  const detalle = document.getElementById("detalle")!;
+/** Ficha de un sector: sigue al mouse en computador y queda fija arriba en el celular. */
+function activarFicha(clases: Clases): void {
+  const ficha = $("ficha");
+  const textos = etiquetas(clases.cortes);
   let activo: string | number | undefined;
 
-  const marcar = (id: string | number | undefined) => {
+  const marcar = (id: string | number | undefined, clase?: number) => {
     if (activo !== undefined) mapa.setFeatureState({ source: "sectores", id: activo }, { activo: false });
     activo = id;
     if (activo !== undefined) mapa.setFeatureState({ source: "sectores", id: activo }, { activo: true });
+    document.querySelectorAll<HTMLElement>(".escala-tramo").forEach((tramo) => {
+      tramo.classList.toggle("activo", clase !== undefined && tramo.dataset.clase === String(clase));
+    });
   };
 
   const mostrar = (evento: MapLayerMouseEvent) => {
     const sector = evento.features?.[0];
     if (!sector) return;
-    marcar(sector.id);
     const p = sector.properties as Sector;
-    const titulo = document.createElement("strong");
-    titulo.textContent = p.nombre || "Sector sin nombre";
-    const linea1 = document.createElement("span");
-    linea1.textContent = `${numero(p.hurtos)} llamadas por hurto`;
-    const linea2 = document.createElement("span");
-    linea2.textContent = `${numero(p.hurtos_km2)} por km² · ${p.area_km2.toLocaleString("es-CO")} km²`;
-    detalle.replaceChildren(titulo, linea1, linea2);
-    detalle.hidden = false;
-    const x = Math.min(evento.point.x + 14, window.innerWidth - detalle.offsetWidth - 8);
-    const y = Math.min(evento.point.y + 14, window.innerHeight - detalle.offsetHeight - 8);
-    detalle.style.transform = `translate(${Math.max(8, x)}px, ${Math.max(8, y)}px)`;
+    const clase = claseDe(p.hurtos_km2, clases.cortes);
+    marcar(sector.id, clase);
+
+    const rotulo = elemento("p", "ficha-rotulo", "Sector catastral");
+    const nombre = elemento("p", "ficha-nombre", p.nombre || "Sin nombre");
+    const cifras = elemento("p", "ficha-cifras");
+    cifras.append(elemento("strong", "", numero(p.hurtos)), " llamadas por hurto");
+    const densidad = elemento("p", "ficha-cifras");
+    const area = p.area_km2.toLocaleString("es-CO", { maximumFractionDigits: 2 });
+    densidad.append(elemento("strong", "", numero(p.hurtos_km2)), ` por km² · ${area} km²`);
+    const nivel = elemento("p", "ficha-nivel");
+    const muestra = elemento("span", "ficha-muestra");
+    muestra.style.backgroundColor = clases.colores[clase];
+    nivel.append(muestra, `${textos[clase]} por km²`);
+    ficha.replaceChildren(rotulo, nombre, cifras, densidad, nivel);
+    ficha.hidden = false;
+
+    ficha.classList.toggle("anclada", celular.matches);
+    if (celular.matches) {
+      ficha.style.transform = "";
+    } else {
+      const x = Math.min(evento.originalEvent.clientX + 16, window.innerWidth - ficha.offsetWidth - 12);
+      const y = Math.min(evento.originalEvent.clientY + 16, window.innerHeight - ficha.offsetHeight - 12);
+      ficha.style.transform = `translate(${Math.max(12, x)}px, ${Math.max(12, y)}px)`;
+    }
   };
 
   const ocultar = () => {
     marcar(undefined);
-    detalle.hidden = true;
+    ficha.hidden = true;
   };
 
   mapa.on("mousemove", "sectores", mostrar);
@@ -155,7 +201,48 @@ function activarDetalle(): void {
   mapa.on("mouseenter", "sectores", () => (mapa.getCanvas().style.cursor = "pointer"));
   mapa.on("mouseleave", "sectores", () => {
     mapa.getCanvas().style.cursor = "";
-    ocultar();
+    if (!celular.matches) ocultar();
   });
-  mapa.on("movestart", ocultar);
+  mapa.on("click", (evento) => {
+    if (!mapa.queryRenderedFeatures(evento.point, { layers: ["sectores"] }).length) ocultar();
+  });
+  mapa.on("dragstart", () => {
+    if (!celular.matches) ocultar();
+  });
+}
+
+/** En el celular, el panel es una hoja que asoma abajo y se despliega con la manija. */
+function activarHoja(): void {
+  const hoja = $("hoja");
+  const asa = $<HTMLButtonElement>("asa");
+  asa.addEventListener("click", () => {
+    const abierta = hoja.classList.toggle("abierta");
+    asa.setAttribute("aria-expanded", String(abierta));
+    asa.querySelector(".solo-lectores")!.textContent = abierta ? "Mostrar menos información" : "Mostrar más información";
+    if (!abierta) hoja.scrollTop = 0;
+  });
+  window.addEventListener("resize", medirHoja);
+  celular.addEventListener("change", medirHoja);
+  medirHoja();
+}
+
+/** Calcula cuánto asoma la hoja en el celular (hasta la escala) y deja ese espacio libre en el mapa. */
+function medirHoja(): void {
+  const raiz = document.documentElement;
+  if (!celular.matches) {
+    raiz.style.removeProperty("--asomar");
+    mapa.setPadding({ top: 0, right: 0, bottom: 0, left: 0 });
+    return;
+  }
+  const resumen = $("resumen");
+  const asomar = Math.round(resumen.offsetTop + resumen.offsetHeight + 16);
+  raiz.style.setProperty("--asomar", `${asomar}px`);
+  mapa.setPadding({ top: 0, right: 0, bottom: asomar, left: 0 });
+}
+
+function elemento<K extends keyof HTMLElementTagNameMap>(etiqueta: K, clase = "", texto?: string) {
+  const nodo = document.createElement(etiqueta);
+  if (clase) nodo.className = clase;
+  if (texto !== undefined) nodo.textContent = texto;
+  return nodo;
 }

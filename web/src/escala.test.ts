@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { clasificar, cuantil, etiquetas, expresionColor, RAMPA, redondear } from "./escala";
+import { claseDe, clasificar, cuantil, etiquetas, expresionColor, RAMPA, redondear } from "./escala";
 
 describe("cuantil", () => {
   it("interpola entre valores", () => {
@@ -63,5 +63,16 @@ describe("expresionColor", () => {
 
   it("usa un solo color si no hay cortes", () => {
     expect(expresionColor("x", { cortes: [], colores: ["#a"] })).toBe("#a");
+  });
+});
+
+describe("claseDe", () => {
+  it("coincide con la expresión step de MapLibre", () => {
+    const cortes = [51, 230, 370, 550];
+    expect(claseDe(0, cortes)).toBe(0);
+    expect(claseDe(50.9, cortes)).toBe(0);
+    expect(claseDe(51, cortes)).toBe(1); // step: el corte pertenece a la clase de arriba
+    expect(claseDe(369, cortes)).toBe(2);
+    expect(claseDe(10_000, cortes)).toBe(4);
   });
 });
