@@ -1,12 +1,13 @@
 # Prepara los datos más recientes, construye la app y la publica en
 # https://gutiba7.github.io/traza-segura/
-# Corre al aprobar cambios en main y cada mes el día 25 (la Secretaría publica el corte del mes
-# anterior hacia el día 21). Requiere GitHub Pages activado con "Source: GitHub Actions".
+# Publica al aprobar cambios en main y cada mes el día 25 (la Secretaría publica el corte del mes
+# anterior hacia el día 21). En las ramas de trabajo solo construye, para detectar errores antes de
+# aprobar. Requiere GitHub Pages activado con "Source: GitHub Actions".
 name: Publicar la app
 
 on:
   push:
-    branches: [main]
+    branches: [main, "claude/**"]
   schedule:
     - cron: "17 6 25 * *"
   workflow_dispatch:
@@ -42,6 +43,7 @@ jobs:
 
   desplegar:
     needs: construir
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
