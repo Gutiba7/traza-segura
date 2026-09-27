@@ -18,7 +18,7 @@ posterior se vea de inmediato en tu celular. Es más motivador y detecta problem
 
 | # | Paso | ✅ Verificación |
 |---|---|---|
-| 0.1 | Crear la estructura de carpetas (`pipeline/`, `web/`) y el archivo `.gitignore`. | Ves las carpetas en GitHub. |
+| 0.1 | Crear la carpeta `web/` de la aplicación (`docs/`, `pipeline/` y `.gitignore` ya existen). | Ves las carpetas en GitHub. |
 | 0.2 | Página mínima con un mapa de Bogotá (MapLibre + OpenFreeMap). | Abres el enlace y ves Bogotá, puedes hacer zoom. |
 | 0.3 | Publicación automática en GitHub Pages cada vez que se aprueba un cambio. | El enlace `https://gutiba7.github.io/traza-segura/` funciona en tu celular. |
 | 0.4 | Revisión automática (pruebas) en cada *pull request*. | Aparece una ✔ verde en GitHub. |
@@ -35,13 +35,13 @@ tipo y, si existe, franja horaria.
 | # | Paso | ✅ Verificación |
 |---|---|---|
 | 1.1 | ✅ **Hecho.** Inventario de fuentes: servidor ArcGIS de la Secretaría, Datos Abiertos Bogotá, Policía Nacional en datos.gov.co y capas complementarias (siniestros viales, alumbrado, ciclorrutas, seguridad nocturna). | [`docs/fuentes.md`](docs/fuentes.md) y el script `pipeline/explorar_fuentes.py`. |
-| 1.2 | **Decisión clave:** elegir la zona más pequeña disponible con datos al día. Los datos oficiales publicados vienen por zona, no como puntos (ver `docs/fuentes.md`). | Te explico el hallazgo y decidimos juntos. |
-| 1.3 | Script de descarga desde **Datos Abiertos Bogotá** (archivos mensuales). El servidor ArcGIS de la Secretaría no responde desde fuera de Colombia, así que la actualización automática no puede depender de él. | Los totales descargados coinciden con los que publica la Secretaría en sus boletines. |
-| 1.4 | Limpieza: unificar nombres de delitos y de zonas, revisar zonas sin datos y cortes de fecha. | Reporte: "X registros originales → Y válidos", con motivos de descarte. |
+| 1.2 | **Decisión clave:** qué zona usar como base. Propuesta: llamadas a la Línea 123 por **sector catastral** (1.170 zonas, al día), ajustadas por modo con las denuncias por localidad. Detalle en `docs/fuentes.md`, sección "Qué significa para Traza Segura". | Tú apruebas la propuesta o elegimos otra. |
+| 1.3 | Script de descarga desde **Datos Abiertos Bogotá** e **IDECA**: incidentes reportados por sector catastral, delitos de alto impacto por localidad, llamadas a la 123 por UPZ, hexágonos de robo de bicicletas y auditoría nocturna. El servidor ArcGIS de la Secretaría no responde desde fuera de Colombia, así que la actualización automática no puede depender de él. | Los totales descargados coinciden con los que publica la Secretaría en sus boletines. |
+| 1.4 | Limpieza y diccionario: confirmar qué significa cada código de campo (por ejemplo `CMH25CONT`), unificar nombres de zonas y revisar zonas sin datos. | `docs/diccionario.md` con cada código explicado y un reporte "X zonas → Y válidas". |
 | 1.5 | Tabla de pesos por tipo de delito **para cada modo** (a pie, bici, carro). | Tabla en `docs/pesos.md` que tú apruebas o ajustas. |
 | 1.6 | Mapa de prueba con las zonas coloreadas sobre Bogotá. | Ves el mapa y los datos caen donde deben (no en el mar ni en Villavicencio). |
 | 1.7 | *(En paralelo)* Enviar el [derecho de petición](docs/derecho-de-peticion.md) para pedir datos más detallados (por cuadrante o por punto, con hora). | Radicado de la petición; respuesta en 10 días hábiles. |
-| 1.8 | *(En paralelo)* Abrir desde Colombia el servicio `SIEDCO_Delitos_Pub` para ver si trae más detalle que los archivos abiertos. | Captura de pantalla de la lista de capas. |
+| 1.8 | *(En paralelo)* Abrir desde Colombia los servicios `SIEDCO_Delitos_Pub` y `CifrasSCJ` para ver si traen más detalle que los archivos abiertos. | Captura de pantalla de la lista de capas. |
 
 🧑 Pasos 1.7 y 1.8: los haces tú desde Colombia (te dejo todo listo). Si traen datos más finos, se
 integran sin cambiar el resto del plan.
@@ -58,7 +58,7 @@ de viaje** (a pie, bicicleta, carro/moto).
 | 2.1 | Descargar de OpenStreetMap las tres redes del perímetro urbano de Bogotá (con OSMnx): **a pie** (andenes y calles), **bici** (incluye ciclorrutas) y **carro** (respeta los sentidos de las vías). | Conteo de esquinas y tramos de cada red y un mapa de cada una. |
 | 2.2 | Asignar delitos a los tramos. Si los datos vienen por zona, cada tramo toma la tasa de su zona (delitos por kilómetro de calle) suavizada con las zonas vecinas, para evitar "saltos" bruscos en los bordes. Si vienen como puntos, se suman los delitos cercanos (ej. a 100 m). En ambos casos se pondera por gravedad y antigüedad. | Mapa donde las calles se colorean de verde a rojo. |
 | 2.3 | Puntaje distinto por modo, con la tabla de pesos aprobada en 1.5: a pie pesa el hurto a personas; en bici, el hurto de bicicletas; en carro, el hurto en vía y de vehículos. | Tres mapas; el de bici debe resaltar zonas distintas al de peatón. |
-| 2.4 | Si hay hora del hecho: dos puntajes por tramo, **día** (6 a. m.–6 p. m.) y **noche**. | Dos mapas; el de noche debe verse distinto al de día. |
+| 2.4 | Dos puntajes por tramo, **día** y **noche**. De noche se suma la auditoría nocturna de la Secretaría de la Mujer (iluminación, visibilidad, presencia de personas); en bici se usan además las franjas horarias de robos. | Dos mapas; el de noche debe verse distinto al de día. |
 | 2.5 | Normalizar (convertir a escala 0–1 por percentiles) para que un solo valor extremo no distorsione todo. | Histograma del riesgo: la mayoría de calles en valores bajos, pocas en rojo. |
 | 2.6 | Exportar tres archivos compactos: `grafo-pie.bin`, `grafo-bici.bin`, `grafo-carro.bin`. | Cada archivo ≤ 10 MB (comprimido, idealmente ≤ 5 MB). |
 | 2.7 | Prueba de sentido común: 5 calles que tú conoces bien y su puntaje en cada modo. | Tú confirmas que el resultado "tiene sentido" o lo ajustamos. |
@@ -87,14 +87,15 @@ más rápida. Se construye **a pie primero**; bici y carro reutilizan el mismo m
 
 ## Fase 4 — Mapa de calor (2–3 días)
 
-**Objetivo:** ver dónde se concentran los delitos, sin señalar direcciones exactas.
+**Objetivo:** ver dónde se concentran los incidentes, sin señalar direcciones exactas ni inventar
+una precisión que los datos no tienen.
 
 | # | Paso | ✅ Verificación |
 |---|---|---|
-| 4.1 | Agrupar delitos en hexágonos (~250 m) y ocultar los que tengan muy pocos casos, para proteger a las víctimas. | Ningún hexágono muestra 1 o 2 casos. |
+| 4.1 | Colorear los sectores catastrales según su nivel de incidentes (y los hexágonos de 100 m en el caso del robo de bicicletas). Las zonas con muy pocos casos se agrupan, para proteger a las víctimas. | Ninguna zona muestra 1 o 2 casos. |
 | 4.2 | Capa de calor que se activa/desactiva con un botón. | Se prende y se apaga. |
-| 4.3 | Filtros: tipo de delito, periodo (último mes / año), día/noche. | Al filtrar, el mapa cambia. |
-| 4.4 | Leyenda y texto explicativo ("delitos denunciados, fuente SDSCJ, fecha de corte"). | Se lee claro en el celular. |
+| 4.3 | Filtros: tipo de incidente, periodo (último mes / año), día/noche. | Al filtrar, el mapa cambia. |
+| 4.4 | Leyenda y texto explicativo ("llamadas a la Línea 123 y delitos denunciados, fuente Secretaría de Seguridad, fecha de corte"). | Se lee claro en el celular. |
 
 ---
 
@@ -112,7 +113,7 @@ más rápida. Se construye **a pie primero**; bici y carro reutilizan el mismo m
 | 5.6 | **Moderación por ti:** resuelves los dudosos o reviertes decisiones desde el panel de Supabase. | Cambias un reporte a "rechazado" y desaparece del mapa. |
 | 5.7 | Protección contra manipulación: un reporte aislado solo se muestra como aviso; para cambiar rutas hacen falta ≥ 2 reportes de dispositivos distintos en la misma zona en 7 días. | Un único reporte no mueve la ruta; dos sí. |
 | 5.8 | Los reportes aprobados suman un poco de riesgo al tramo cercano y **caducan a los 30 días**. | La ruta vuelve a la normalidad al caducar. |
-| 5.9 | Política de privacidad, términos de uso y aviso "Si estás en peligro, llama al 123". | Páginas accesibles desde el menú. |
+| 5.9 | Política de privacidad, términos de uso y **botón de ayuda**: llamar al 123 o al cuadrante de policía donde estás (teléfono oficial de cada cuadrante). | El botón marca el número correcto según tu ubicación. |
 
 🧑 Crear la cuenta gratuita de Supabase y una de Cloudflare (para Turnstile). Te guío paso a paso.
 Para que Claude modere, la clave de Supabase se guarda como credencial del entorno de Claude Code
@@ -128,8 +129,8 @@ Para que Claude modere, la clave de Supabase se guarda como credencial del entor
 |---|---|---|
 | 6.1 | Ícono, nombre y colores; opción "Agregar a pantalla de inicio". | Se instala en Android (Chrome) y iPhone (Safari). |
 | 6.2 | Modo sin conexión: mapa base de Bogotá y grafo guardados. | En modo avión, calculas una ruta. |
-| 6.3 | Aviso cuando hay datos nuevos ("Datos actualizados al 1 de octubre"). | Se ve la fecha de corte. |
-| 6.4 | Actualización mensual automática de datos (GitHub Actions, día 1 de cada mes). | Un *pull request* automático con datos nuevos que tú apruebas. |
+| 6.3 | Aviso cuando hay datos nuevos ("Datos con corte a agosto de 2026"). | Se ve la fecha de corte. |
+| 6.4 | Actualización mensual automática de datos (GitHub Actions, el día 25 de cada mes: la Secretaría publica el corte del mes anterior hacia el día 21). | Un *pull request* automático con datos nuevos que tú apruebas. |
 | 6.5 | Accesibilidad: textos legibles, contraste, uso con lector de pantalla. | Puntaje ≥ 90 en Lighthouse (herramienta gratuita de Google). |
 | 6.6 | (Opcional) Dominio propio. | `trazasegura.co` (o el que elijas) abre la app. |
 
@@ -138,8 +139,10 @@ Para que Claude modere, la clave de Supabase se guarda como credencial del entor
 ## Después del lanzamiento (ideas, sin compromiso)
 
 - Compartir trayecto en vivo con un contacto de confianza.
-- Rutas en bicicleta.
-- Datos adicionales: alumbrado público, comercios abiertos de noche, estaciones de TransMilenio.
+- Seguridad vial para bici y carro con los siniestros viales georreferenciados de la Secretaría de
+  Movilidad (si publican datos posteriores a 2021).
+- Datos adicionales: alumbrado público calle por calle (hoy solo se publica por UPZ), comercios
+  abiertos de noche, estaciones de TransMilenio.
 - Medir si la gente usa la ruta segura (de forma anónima y agregada).
 
 ## Resumen de tiempos

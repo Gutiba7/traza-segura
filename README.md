@@ -6,7 +6,8 @@ Traza Segura es una aplicación web instalable (PWA) que, dados un punto de orig
 destino en Bogotá, calcula el camino que **evita las zonas con más delitos registrados**,
 aceptando un pequeño desvío a cambio de más tranquilidad.
 
-> Estado actual: **planeación**. Todavía no hay código. El plan de trabajo está en
+> Estado actual: **planeación y exploración de datos** (paso 1.1 terminado: ver
+> [docs/fuentes.md](docs/fuentes.md)). La app todavía no existe. El plan de trabajo está en
 > [PLAN.md](PLAN.md).
 
 ---
@@ -28,8 +29,9 @@ Principios que guían todas las decisiones:
    OpenStreetMap. Cualquier persona puede revisar de dónde sale cada número.
 2. **Privacidad por diseño.** La ruta se calcula **dentro del celular**. Tu origen y tu
    destino no se envían a ningún servidor.
-3. **Honestidad sobre los límites.** Los datos son *delitos denunciados*, no todos los que
-   ocurren. La app muestra riesgo *relativo*, nunca promete "seguridad garantizada".
+3. **Honestidad sobre los límites.** Los datos son *delitos denunciados* y *llamadas a la Línea
+   123*, no todo lo que ocurre, y vienen por zonas. La app muestra riesgo *relativo* y nunca
+   promete "seguridad garantizada".
 4. **No estigmatizar.** Mostramos calles y franjas horarias, no etiquetamos barrios como
    "peligrosos". El mapa de calor agrega datos para no señalar direcciones exactas.
 5. **Costo casi cero.** Debe poder mantenerse gratis o por muy poco dinero durante años.
@@ -41,8 +43,9 @@ Principios que guían todas las decisiones:
 | **Ruta más segura** | Calcula la ruta de menor riesgo entre dos puntos y la compara con la más corta. | 3 |
 | **Tres modos de viaje** | **A pie** (primero), **bicicleta** y **carro/moto**. Cada modo usa sus propias calles (el carro respeta los sentidos viales; la bici prefiere ciclorrutas) y los delitos que más lo afectan. | 3 |
 | **Control "más seguro ↔ más corto"** | Un deslizador para decidir cuánto desvío estás dispuesto a aceptar. | 3 |
-| **Día / noche** | El riesgo cambia según la hora (si los datos oficiales traen la hora del hecho). | 3 |
+| **Día / noche** | El riesgo cambia según la hora. Para bici hay datos oficiales por franja de 3 horas; de noche se suma una auditoría de iluminación y visibilidad calle por calle. | 3 |
 | **Aviso en el destino** | Para carro, moto y bici: si el destino está en una zona con muchos robos de vehículos, sugiere parquear en un lugar vigilado. | 3 |
+| **Botón de ayuda** | Llama al 123 o al **cuadrante de policía** de la zona donde estás (dato oficial con el teléfono de cada cuadrante). | 5 |
 | **Mapa de calor** | Muestra dónde se concentran los delitos registrados, por tipo y periodo. | 4 |
 | **Reportes ciudadanos** | Permite reportar de forma anónima una situación (poca luz, robo, acoso). Se moderan antes de influir en las rutas. | 5 |
 | **Instalable y offline** | Se instala como app desde el navegador y funciona con mala señal una vez descargada. | 6 |
@@ -53,11 +56,11 @@ real para carro, compartir el trayecto en vivo con un contacto, otras ciudades.
 
 ### ¿Por qué incluir bicicleta y carro desde el principio?
 
-Los datos oficiales de delitos vienen **agrupados por zonas** (ver sección 3). En un trayecto a pie
-de 5 cuadras casi siempre te quedas dentro de la misma zona, así que no hay mucha alternativa que
-ofrecer. En bici o en carro recorres varios kilómetros y atraviesas muchas zonas: ahí sí se puede
-elegir entre pasar por una zona con muchos robos o rodearla. Con datos por zona, **los trayectos
-largos son donde la app aporta más**.
+Los datos oficiales de delitos vienen **agrupados por zonas**: en el mejor caso, sectores de unas
+5×5 cuadras en promedio (ver sección 3). En un trayecto a pie de 5 cuadras casi siempre te quedas
+dentro de la misma zona, así que no hay mucha alternativa que ofrecer. En bici o en carro recorres
+varios kilómetros y atraviesas muchas zonas: ahí sí se puede elegir entre pasar por una zona con
+muchos robos o rodearla. Con datos por zona, **los trayectos largos son donde la app aporta más**.
 
 ## 3. Arquitectura propuesta
 
@@ -67,8 +70,9 @@ celular del usuario.** Así no necesitamos un servidor encendido las 24 horas.
 ```
  ┌───────────────────────── UNA VEZ AL MES (automático, gratis) ─────────────────────────┐
  │                                                                                        │
- │   Datos de delitos (SDSCJ,           Red vial de Bogotá                                │
- │   servicios ArcGIS REST)             (OpenStreetMap)                                   │
+ │   Datos de delitos (Secretaría de    Red vial de Bogotá                                │
+ │   Seguridad, vía Datos Abiertos      (OpenStreetMap)                                   │
+ │   Bogotá e IDECA)                                                                      │
  │            │                                │                                          │
  │            ▼                                ▼                                          │
  │   ┌────────────────────────────────────────────────────────┐                           │
@@ -106,9 +110,10 @@ celular del usuario.** Así no necesitamos un servidor encendido las 24 horas.
 
 1. **Las calles como una red.** OpenStreetMap nos da cada tramo de calle entre dos esquinas.
    A eso se le llama un *grafo*: puntos (esquinas) unidos por líneas (tramos).
-2. **Riesgo por tramo.** Para cada tramo miramos cuántos delitos ocurrieron cerca, dando más
-   peso a los recientes y a los más graves. El resultado es un número de 0 a 1. Cada modo de
-   viaje mira los delitos que realmente lo afectan:
+2. **Riesgo por tramo.** Para cada tramo miramos cuántos incidentes hubo en su zona (y en las
+   zonas vecinas), dando más peso a los recientes y a los más graves. Donde hay datos más finos,
+   como los robos de bicicleta en hexágonos de 100 m, se usan esos. El resultado es un número de
+   0 a 1. Cada modo de viaje mira los delitos que realmente lo afectan:
 
    | Modo | Delitos que más pesan |
    |---|---|
@@ -126,10 +131,21 @@ celular del usuario.** Así no necesitamos un servidor encendido las 24 horas.
 5. **Comparar.** Mostramos la ruta segura junto a la más corta, con minutos extra y porcentaje
    de riesgo evitado, para que la persona decida.
 
-> **Punto a confirmar en la Fase 1:** si la Secretaría publica cada delito como un punto con
-> coordenadas, el riesgo será por calle. Si solo publica totales por zona (localidad, UPZ o
-> cuadrante), el riesgo será por zona: funciona, pero es menos fino. El plan contempla ambos
-> casos.
+### Lo que encontramos en los datos (Fase 1.1)
+
+El inventario completo está en [docs/fuentes.md](docs/fuentes.md). Lo esencial:
+
+- **No hay datos abiertos con la ubicación exacta de cada delito.** Lo más fino son las llamadas a
+  la Línea 123 por **sector catastral** (1.170 zonas; en promedio, unas 5×5 cuadras). Las
+  denuncias oficiales por tipo de delito solo vienen **por localidad** (20 zonas).
+- Por eso el riesgo será **por zona**, suavizado entre zonas vecinas, más tres capas con detalle
+  casi de cuadra: robos de bicicleta en hexágonos de 100 m, la auditoría nocturna de la Secretaría
+  de la Mujer (44.335 puntos) y siniestros viales con coordenadas.
+- El servidor ArcGIS de la Secretaría **no responde desde fuera de Colombia**, así que la
+  actualización automática usa Datos Abiertos Bogotá e IDECA, que publican lo mismo.
+- Para ganar precisión se puede pedir el detalle con un
+  [derecho de petición](docs/derecho-de-peticion.md). Si llega, se reemplaza la fuente sin
+  cambiar el resto de la app.
 
 ### Moderación de reportes ciudadanos: Claude y tú
 
@@ -153,7 +169,8 @@ Reglas de protección adicionales:
   reportes de dispositivos distintos en la misma zona en 7 días, para que una sola persona no
   pueda manipular el sistema.
 - Los reportes caducan a los 30 días.
-- La app no es un canal de emergencias: siempre muestra "Si estás en peligro, llama al 123".
+- La app no es un canal de emergencias: siempre tiene a mano el botón de ayuda (123 y cuadrante
+  de policía).
 
 ## 4. Stack propuesto (y por qué)
 
@@ -211,8 +228,8 @@ traza-segura/
   anónimos: no guardan IP, nombre ni teléfono. Solo guardan un código aleatorio del dispositivo,
   que no revela quién eres y sirve para que una misma persona no pueda reportar lo mismo muchas
   veces. Esto se alinea con la Ley 1581 de 2012 (Habeas Data).
-- **Aviso al usuario:** "Traza Segura muestra riesgo relativo según delitos denunciados. No
-  garantiza tu seguridad. Mantente atento a tu entorno."
+- **Aviso al usuario:** "Traza Segura muestra riesgo relativo por zonas, según delitos
+  denunciados y llamadas a la Línea 123. No garantiza tu seguridad. Mantente atento a tu entorno."
 
 ## 7. Glosario rápido
 
@@ -227,6 +244,8 @@ traza-segura/
 - **Localidad / UPZ / cuadrante:** divisiones de Bogotá de mayor a menor tamaño. Hay 20
   localidades y más de 100 UPZ (Unidades de Planeamiento Zonal). Los cuadrantes son las zonas
   que patrulla cada equipo de la Policía y son más pequeños que una UPZ.
+- **Sector catastral:** zona definida por Catastro Bogotá, parecida a un barrio. Hay unos 1.170
+  y es la zona más pequeña con datos de seguridad abiertos y al día.
 - **SIEDCO:** sistema de la Policía Nacional donde se registran las denuncias de delitos; de ahí
   salen las cifras oficiales.
 - **Derecho de petición:** solicitud formal y gratuita a una entidad pública, que debe responder
