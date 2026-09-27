@@ -112,8 +112,9 @@ celular del usuario.** Así no necesitamos un servidor encendido las 24 horas.
    A eso se le llama un *grafo*: puntos (esquinas) unidos por líneas (tramos).
 2. **Riesgo por tramo.** Para cada tramo miramos cuántos incidentes hubo en su zona (y en las
    zonas vecinas), dando más peso a los recientes y a los más graves. Donde hay datos más finos,
-   como los robos de bicicleta en hexágonos de 100 m, se usan esos. El resultado es un número de
-   0 a 1. Cada modo de viaje mira los delitos que realmente lo afectan:
+   como los robos de bicicleta en hexágonos de 100 m, se usan esos. El resultado es un **riesgo
+   relativo**: 1 es el promedio de la ciudad y 2, el doble. Cada modo de viaje mira los delitos
+   que realmente lo afectan:
 
    | Modo | Delitos que más pesan |
    |---|---|
@@ -126,10 +127,14 @@ celular del usuario.** Así no necesitamos un servidor encendido las 24 horas.
      se usa la velocidad típica de cada tipo de vía (sin tráfico en tiempo real, al menos al principio).
    - `α` (alfa) es el deslizador "más seguro ↔ más corto". Con α = 0 sale la ruta más rápida;
      con α alto, la app acepta desvíos grandes para evitar tramos riesgosos.
+   - En palabras: un minuto en un tramo con riesgo 3 "cuesta" como 1 + 3α minutos.
 4. **Buscar el camino de menor costo.** Se usa el algoritmo A* (un método clásico y rápido para
    encontrar caminos en mapas). Con la red de Bogotá tarda menos de un segundo en un celular.
 5. **Comparar.** Mostramos la ruta segura junto a la más corta, con minutos extra y porcentaje
    de riesgo evitado, para que la persona decida.
+
+Las fórmulas completas, por qué son correctas y la evidencia con datos reales están en
+[docs/metodologia.md](docs/metodologia.md).
 
 ### Lo que encontramos en los datos (Fase 1.1)
 
@@ -143,6 +148,10 @@ El inventario completo está en [docs/fuentes.md](docs/fuentes.md). Lo esencial:
   de la Mujer (44.335 puntos) y siniestros viales con coordenadas.
 - El servidor ArcGIS de la Secretaría **no responde desde fuera de Colombia**, así que la
   actualización automática usa Datos Abiertos Bogotá e IDECA, que publican lo mismo.
+- Los supuestos del modelo se comprobaron con los datos oficiales: el patrón por sector se
+  repite casi idéntico de un año a otro, y las llamadas por hurto, riñas y disparos siguen el
+  mismo patrón que las denuncias de hurto, lesiones y homicidio. El robo de bicicletas no, y por
+  eso usa su propia capa.
 - Para ganar precisión se puede pedir el detalle con un
   [derecho de petición](docs/derecho-de-peticion.md). Si llega, se reemplaza la fuente sin
   cambiar el resto de la app.

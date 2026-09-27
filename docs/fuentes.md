@@ -25,7 +25,7 @@ leyendo su descripción; lo marcado ⚠️ es una limitación o algo por confirm
 
 | # | Fuente | Entidad | Qué mide | Detalle geográfico | Periodo | Uso en Traza Segura |
 |---|---|---|---|---|---|---|
-| 1 | **Incidente Reportado** | Secretaría de Seguridad (Línea 123) | Llamadas ciudadanas en 9 categorías (hurto, riñas, disparos, maltrato, entre otras) | ✅ **1.170 sectores catastrales**, 117 UPZ y 20 localidades | ✅ 2018 – agosto 2026, mensual | **Señal principal de riesgo por zona**, en los tres modos |
+| 1 | **Incidente Reportado** | Secretaría de Seguridad (Línea 123) | Llamadas ciudadanas en 9 categorías: hurtos, riñas, disparos, porte de armas, narcóticos, ruido, maltrato (dos categorías) y habitante de la calle | ✅ **1.170 sectores catastrales**, 117 UPZ y 20 localidades | ✅ 2018 – agosto 2026, mensual | **Señal principal de riesgo por zona**, en los tres modos |
 | 2 | **Delito de Alto Impacto** | Secretaría de Seguridad (datos SIEDCO de la Policía) | Denuncias de 11 delitos: hurto a personas, a residencias, a comercio, de carros, motos, bicicletas y celulares; lesiones, homicidio, delitos sexuales y violencia intrafamiliar | ⚠️ Solo **20 localidades** | ✅ 2018 – agosto 2026, mensual | Calibrar cuánto pesa cada delito en cada modo y en cada localidad |
 | 3 | **Llamadas tramitadas NUSE 123** (CSV) | Secretaría de Seguridad (C4) | Llamadas por decenas de tipos de incidente: hurto efectuado, atraco en proceso, lesiones, disparos, violencia sexual, vehículo hurtado… | ✅ 117 UPZ | ✅ enero 2015 – agosto 2026, mensual | Detalle por tipo de incidente y tendencias largas |
 | 4 | **Zonas de riesgo por hurto de bicicletas** | IDECA, con datos SIEDCO de la Secretaría de Seguridad | Robos de bicicleta por celda | ✅ **Hexágonos de 100 a 500 m**, también por **franja de 3 horas** | ⚠️ El servicio no indica el periodo | Modo bici y su versión día/noche |
@@ -52,10 +52,11 @@ Usar las dos juntas compensa las debilidades de cada una.
 - ✅ El zip trae tres archivos: `IRSCAT.geojson` (1.170 sectores catastrales, 18 MB),
   `IRUPZ.geojson` (117 UPZ) e `IRLoc.geojson` (20 localidades).
 - Campos: identificador y nombre de la zona (`CMIUSCAT`, `CMNOMSCAT`) y un conteo por categoría y
-  año con la forma `CM<categoría><año>CONT`, por ejemplo `CMH25CONT`. Categorías: `R`, `N`, `AOP`,
-  `MM`, `M`, `D`, `PIA`, `H`, `HC`. ⚠️ El archivo no explica los códigos. Por los tipos de
-  incidente de la Línea 123, lo más probable es que `H` sea hurto, `D` disparos, `R` riñas y `MM`
-  maltrato a mujer, pero es una deducción que se confirma en el paso 1.4.
+  año con la forma `CM<categoría><año>CONT`, por ejemplo `CMH25CONT`.
+- ✅ Diccionario comprobado con los datos (ver [metodologia.md](metodologia.md), sección 12.1):
+  `H` hurtos (904 + 905), `R` riñas, `D` disparos, `PIA` porte de armas, `N` narcóticos, `AOP`
+  ruido, `M` maltrato, `HC` habitante de la calle. `MM` es probablemente "maltrato a mujer".
+  Ojo: `HC` **no** es hurto a comercio.
 
 ### 2. Delito de Alto Impacto
 - Descarga (enero–agosto 2018–2026):
@@ -137,24 +138,29 @@ cambio, Datos Abiertos Bogotá, Mapas Bogotá e IDECA sí responden desde el mis
 - Si `SIEDCO_Delitos_Pub` trae más detalle que los archivos abiertos, solo se puede ver desde
   Colombia (paso 1.8 del PLAN).
 
-## Qué significa para Traza Segura (propuesta para el paso 1.2)
+## Qué significa para Traza Segura (decisión del paso 1.2)
 
-1. **Riesgo base por sector catastral** (fuente 1), con más peso para los hurtos. Cada tramo de
-   calle toma el valor de su sector, suavizado con los sectores vecinos para que no haya saltos
-   bruscos en los bordes.
-2. **Ajuste por modo** con las denuncias por localidad (fuente 2). Por ejemplo, si en una localidad
-   la proporción de robo de bicicletas es alta, el modo bici pesa más ahí.
-3. **Bici:** además, los hexágonos de 100 m de robo de bicicletas (fuente 4), con franja horaria.
-4. **Noche:** la auditoría nocturna (fuente 5) como ajuste calle por calle, y las franjas
-   horarias de la fuente 4 para bici.
-5. **Honestidad:** la app dirá que el riesgo es "por zona (en promedio, unas 5×5 cuadras)", no
-   por cuadra exacta. Si el derecho de petición trae datos más finos, se reemplaza la fuente 1 sin cambiar
+Aprobada tras revisarla y comprobar sus supuestos con los datos. El detalle matemático y la
+evidencia están en [metodologia.md](metodologia.md). En resumen:
+
+1. **Las denuncias por localidad (fuente 2) dicen cuánto hubo**, y **las llamadas por sector
+   (fuente 1) dicen dónde dentro de cada localidad**. Solo cuentan hurtos, riñas y disparos;
+   "habitante de la calle" nunca cuenta como peligro.
+2. **Los sectores con pocos casos se suavizan** con el método bayesiano empírico, que los acerca a
+   sus vecinos en proporción a lo poco confiable que es su propio dato.
+3. **Bici:** los hexágonos de 100 m de robo de bicicletas (fuente 4), con franja horaria. Las
+   llamadas por hurto no sirven para esto: siguen un patrón distinto al del robo de bicicletas.
+4. **Noche:** la auditoría nocturna (fuente 5) como ajuste calle por calle.
+5. **Honestidad:** la app dirá que el riesgo es "por zona (unas 5×5 cuadras)", no por cuadra
+   exacta. Si el derecho de petición trae datos más finos, se reemplaza la fuente 1 sin cambiar
    nada más.
 
 ## Pendiente por confirmar
 
-- Significado exacto de las 9 categorías de "Incidente Reportado" (`R`, `N`, `AOP`, `MM`, `M`,
-  `D`, `PIA`, `H`, `HC`) y de los códigos de "Delito de Alto Impacto".
+- Los códigos de "Delito de Alto Impacto" (interpretación muy probable, falta confirmarla) y la
+  categoría `MM` de las llamadas.
+- Si las llamadas por "vehículo hurtado" y "violencia sexual" (por UPZ) siguen el patrón de las
+  denuncias de robo de motos, robo de carros y delitos sexuales.
 - Periodo y licencia de los hexágonos de robo de bicicletas.
 - Contenido real de `SIEDCO_Delitos_Pub` y de `CifrasSCJ` (solo visibles desde Colombia).
 - Si existe una versión de siniestros viales posterior a 2021.

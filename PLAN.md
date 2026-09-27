@@ -35,9 +35,9 @@ tipo y, si existe, franja horaria.
 | # | Paso | ✅ Verificación |
 |---|---|---|
 | 1.1 | ✅ **Hecho.** Inventario de fuentes: servidor ArcGIS de la Secretaría, Datos Abiertos Bogotá, Policía Nacional en datos.gov.co y capas complementarias (siniestros viales, alumbrado, ciclorrutas, seguridad nocturna). | [`docs/fuentes.md`](docs/fuentes.md) y el script `pipeline/explorar_fuentes.py`. |
-| 1.2 | **Decisión clave:** qué zona usar como base. Propuesta: llamadas a la Línea 123 por **sector catastral** (1.170 zonas, al día), ajustadas por modo con las denuncias por localidad. Detalle en `docs/fuentes.md`, sección "Qué significa para Traza Segura". | Tú apruebas la propuesta o elegimos otra. |
+| 1.2 | ✅ **Decidido.** Las denuncias por localidad dicen *cuánto* hubo y las llamadas a la Línea 123 por **sector catastral** (1.170 zonas) dicen *dónde*, con suavizado bayesiano y solo delitos de calle. Supuestos comprobados con datos reales. | [`docs/metodologia.md`](docs/metodologia.md), con fórmulas y evidencia. |
 | 1.3 | Script de descarga desde **Datos Abiertos Bogotá** e **IDECA**: incidentes reportados por sector catastral, delitos de alto impacto por localidad, llamadas a la 123 por UPZ, hexágonos de robo de bicicletas y auditoría nocturna. El servidor ArcGIS de la Secretaría no responde desde fuera de Colombia, así que la actualización automática no puede depender de él. | Los totales descargados coinciden con los que publica la Secretaría en sus boletines. |
-| 1.4 | Limpieza y diccionario: confirmar qué significa cada código de campo (por ejemplo `CMH25CONT`), unificar nombres de zonas y revisar zonas sin datos. | `docs/diccionario.md` con cada código explicado y un reporte "X zonas → Y válidas". |
+| 1.4 | Diccionario y limpieza. ✅ Ya descifrados los 9 códigos de llamadas por sector (coincidencia exacta con la Línea 123). Falta: confirmar los códigos de denuncias y la categoría `MM`, validar "vehículo hurtado" y "violencia sexual" por UPZ, y unificar nombres de zonas. | Tabla de códigos en `docs/metodologia.md` (12.1) y un reporte "X zonas → Y válidas". |
 | 1.5 | Tabla de pesos por tipo de delito **para cada modo** (a pie, bici, carro). | Tabla en `docs/pesos.md` que tú apruebas o ajustas. |
 | 1.6 | Mapa de prueba con las zonas coloreadas sobre Bogotá. | Ves el mapa y los datos caen donde deben (no en el mar ni en Villavicencio). |
 | 1.7 | *(En paralelo)* Enviar el [derecho de petición](docs/derecho-de-peticion.md) para pedir datos más detallados (por cuadrante o por punto, con hora). | Radicado de la petición; respuesta en 10 días hábiles. |
@@ -56,12 +56,12 @@ de viaje** (a pie, bicicleta, carro/moto).
 | # | Paso | ✅ Verificación |
 |---|---|---|
 | 2.1 | Descargar de OpenStreetMap las tres redes del perímetro urbano de Bogotá (con OSMnx): **a pie** (andenes y calles), **bici** (incluye ciclorrutas) y **carro** (respeta los sentidos de las vías). | Conteo de esquinas y tramos de cada red y un mapa de cada una. |
-| 2.2 | Asignar delitos a los tramos. Si los datos vienen por zona, cada tramo toma la tasa de su zona (delitos por kilómetro de calle) suavizada con las zonas vecinas, para evitar "saltos" bruscos en los bordes. Si vienen como puntos, se suman los delitos cercanos (ej. a 100 m). En ambos casos se pondera por gravedad y antigüedad. | Mapa donde las calles se colorean de verde a rojo. |
+| 2.2 | Asignar el riesgo a los tramos: reparto de las denuncias entre sectores según las llamadas, suavizado bayesiano empírico con los sectores vecinos, peso por antigüedad (vida media de un año) y promedio ponderado en los tramos que son límite entre sectores. Ver `docs/metodologia.md`, secciones 3 a 7. | Mapa donde las calles se colorean de verde a rojo. |
 | 2.3 | Puntaje distinto por modo, con la tabla de pesos aprobada en 1.5: a pie pesa el hurto a personas; en bici, el hurto de bicicletas; en carro, el hurto en vía y de vehículos. | Tres mapas; el de bici debe resaltar zonas distintas al de peatón. |
 | 2.4 | Dos puntajes por tramo, **día** y **noche**. De noche se suma la auditoría nocturna de la Secretaría de la Mujer (iluminación, visibilidad, presencia de personas); en bici se usan además las franjas horarias de robos. | Dos mapas; el de noche debe verse distinto al de día. |
-| 2.5 | Normalizar (convertir a escala 0–1 por percentiles) para que un solo valor extremo no distorsione todo. | Histograma del riesgo: la mayoría de calles en valores bajos, pocas en rojo. |
+| 2.5 | Expresar el riesgo como **riesgo relativo** (1 = promedio de la ciudad), con un tope de 5 para que un valor extremo no domine. *Corrige el plan original, que usaba percentiles: sumar percentiles no tiene significado matemático.* Los percentiles quedan solo para colorear el mapa. | Histograma del riesgo: la mayoría de calles cerca de 1, pocas por encima de 3. |
 | 2.6 | Exportar tres archivos compactos: `grafo-pie.bin`, `grafo-bici.bin`, `grafo-carro.bin`. | Cada archivo ≤ 10 MB (comprimido, idealmente ≤ 5 MB). |
-| 2.7 | Prueba de sentido común: 5 calles que tú conoces bien y su puntaje en cada modo. | Tú confirmas que el resultado "tiene sentido" o lo ajustamos. |
+| 2.7 | Prueba de sentido común: 5 calles que tú conoces bien y su puntaje en cada modo. Se comparan dos versiones de la exposición (por kilómetro de calle y por actividad: censo más uso comercial), porque dividir solo por kilómetros castiga de más a las calles concurridas. | Tú confirmas cuál versión "tiene sentido" o la ajustamos. |
 
 ---
 
@@ -75,7 +75,7 @@ más rápida. Se construye **a pie primero**; bici y carro reutilizan el mismo m
 | 3.1 | La app descarga el grafo del modo elegido y lo guarda en el teléfono. | Segunda visita carga casi instantánea. |
 | 3.2 | Elegir origen y destino tocando el mapa o con "Mi ubicación". | Aparecen dos marcadores. |
 | 3.3 | Algoritmo A* con costo `tiempo × (1 + α × riesgo)`, **a pie**. | Dibuja una ruta que sigue calles reales. |
-| 3.4 | Mostrar las dos rutas (segura y rápida) con: distancia, minutos, % de riesgo evitado. | Tarjeta resumen legible. |
+| 3.4 | Mostrar las dos rutas (segura y rápida) con: distancia, minutos, % de riesgo evitado. Si la diferencia es menor al 10 %, la app dice "riesgo similar" en vez de presumir una diferencia que está dentro del ruido. | Tarjeta resumen legible. |
 | 3.5 | Deslizador "más seguro ↔ más corto" y selector día/noche. | Al moverlo, la ruta cambia. |
 | 3.6 | Selector de modo **🚶 / 🚲 / 🚗** usando los grafos de bici y carro. | En carro la ruta respeta los sentidos viales; en bici aprovecha ciclorrutas. |
 | 3.7 | Aviso en el destino para bici, moto y carro si la zona tiene muchos robos de vehículos. | Aparece al elegir un destino en una zona roja. |
