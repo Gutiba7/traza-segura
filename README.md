@@ -39,15 +39,25 @@ Principios que guían todas las decisiones:
 | Función | Qué hace | Fase |
 |---|---|---|
 | **Ruta más segura** | Calcula la ruta de menor riesgo entre dos puntos y la compara con la más corta. | 3 |
+| **Tres modos de viaje** | **A pie** (primero), **bicicleta** y **carro/moto**. Cada modo usa sus propias calles (el carro respeta los sentidos viales; la bici prefiere ciclorrutas) y los delitos que más lo afectan. | 3 |
 | **Control "más seguro ↔ más corto"** | Un deslizador para decidir cuánto desvío estás dispuesto a aceptar. | 3 |
 | **Día / noche** | El riesgo cambia según la hora (si los datos oficiales traen la hora del hecho). | 3 |
+| **Aviso en el destino** | Para carro, moto y bici: si el destino está en una zona con muchos robos de vehículos, sugiere parquear en un lugar vigilado. | 3 |
 | **Mapa de calor** | Muestra dónde se concentran los delitos registrados, por tipo y periodo. | 4 |
 | **Reportes ciudadanos** | Permite reportar de forma anónima una situación (poca luz, robo, acoso). Se moderan antes de influir en las rutas. | 5 |
 | **Instalable y offline** | Se instala como app desde el navegador y funciona con mala señal una vez descargada. | 6 |
 | **"Mi ubicación"** | Usa el GPS del celular como punto de partida, sin guardarlo. | 3 |
 
-Fuera del alcance inicial (ideas para después): navegación paso a paso con voz, rutas en
-bicicleta o en carro, compartir el trayecto en vivo con un contacto, otras ciudades.
+Fuera del alcance inicial (ideas para después): navegación paso a paso con voz, tráfico en tiempo
+real para carro, compartir el trayecto en vivo con un contacto, otras ciudades.
+
+### ¿Por qué incluir bicicleta y carro desde el principio?
+
+Los datos oficiales de delitos vienen **agrupados por zonas** (ver sección 3). En un trayecto a pie
+de 5 cuadras casi siempre te quedas dentro de la misma zona, así que no hay mucha alternativa que
+ofrecer. En bici o en carro recorres varios kilómetros y atraviesas muchas zonas: ahí sí se puede
+elegir entre pasar por una zona con muchos robos o rodearla. Con datos por zona, **los trayectos
+largos son donde la app aporta más**.
 
 ## 3. Arquitectura propuesta
 
@@ -64,15 +74,17 @@ celular del usuario.** Así no necesitamos un servidor encendido las 24 horas.
  │   ┌────────────────────────────────────────────────────────┐                           │
  │   │  "Tubería de datos" en Python (GitHub Actions)         │                           │
  │   │   1. Descarga y limpia los delitos                     │                           │
- │   │   2. Descarga las calles caminables                    │                           │
+ │   │   2. Descarga las calles: a pie, en bici y en carro    │                           │
  │   │   3. Le pone a cada tramo de calle un puntaje de riesgo│                           │
+ │   │      distinto para cada modo de viaje                  │                           │
  │   │   4. Genera archivos compactos listos para la app      │                           │
  │   └────────────────────────────────────────────────────────┘                           │
  │            │                                                                           │
  └────────────┼───────────────────────────────────────────────────────────────────────────┘
               ▼
    Archivos estáticos publicados en internet (GitHub Pages)
-     • grafo.bin       → las calles con su riesgo (unos pocos MB)
+     • grafo-pie.bin, grafo-bici.bin, grafo-carro.bin
+                       → las calles de cada modo con su riesgo (unos pocos MB cada uno)
      • calor.json      → datos para el mapa de calor
      • la app (HTML, CSS, JavaScript)
               │
@@ -80,14 +92,14 @@ celular del usuario.** Así no necesitamos un servidor encendido las 24 horas.
  ┌──────────────────────── EN EL CELULAR DEL USUARIO ────────────────────────┐
  │  PWA (app web instalable)                                                  │
  │   • Muestra el mapa (MapLibre + mapa base gratuito)                         │
- │   • Descarga grafo.bin una vez y lo guarda                                  │
+ │   • Descarga solo el grafo del modo que uses, una vez, y lo guarda          │
  │   • Calcula la ruta más segura AHÍ MISMO (algoritmo A*)                     │
  │   • Funciona sin conexión después de la primera visita                      │
  └──────────────────────────────┬─────────────────────────────────────────────┘
                                 │ (solo para reportes ciudadanos, Fase 5)
                                 ▼
                      Supabase (base de datos gratuita)
-                     reportes anónimos + panel de moderación
+                     reportes anónimos → moderados por Claude y por ti
 ```
 
 ### ¿Cómo se calcula "la ruta más segura"?
@@ -95,10 +107,19 @@ celular del usuario.** Así no necesitamos un servidor encendido las 24 horas.
 1. **Las calles como una red.** OpenStreetMap nos da cada tramo de calle entre dos esquinas.
    A eso se le llama un *grafo*: puntos (esquinas) unidos por líneas (tramos).
 2. **Riesgo por tramo.** Para cada tramo miramos cuántos delitos ocurrieron cerca, dando más
-   peso a los recientes y a los más graves (por ejemplo, hurto a personas pesa más que
-   hurto de autopartes para alguien que camina). El resultado es un número de 0 a 1.
-3. **Costo del tramo** = `longitud × (1 + α × riesgo)`.
-   - `α` (alfa) es el deslizador "más seguro ↔ más corto". Con α = 0 sale la ruta más corta;
+   peso a los recientes y a los más graves. El resultado es un número de 0 a 1. Cada modo de
+   viaje mira los delitos que realmente lo afectan:
+
+   | Modo | Delitos que más pesan |
+   |---|---|
+   | A pie | Hurto a personas, lesiones personales, homicidio, delitos sexuales |
+   | Bicicleta | Hurto de bicicletas, hurto a personas, lesiones personales |
+   | Carro / moto | Hurto a personas en vía (fleteo, raponeo en trancones), hurto de motos y carros |
+
+3. **Costo del tramo** = `tiempo × (1 + α × riesgo)`.
+   - Para caminar y la bici, el tiempo sale de la distancia a velocidad constante. Para el carro
+     se usa la velocidad típica de cada tipo de vía (sin tráfico en tiempo real, al menos al principio).
+   - `α` (alfa) es el deslizador "más seguro ↔ más corto". Con α = 0 sale la ruta más rápida;
      con α alto, la app acepta desvíos grandes para evitar tramos riesgosos.
 4. **Buscar el camino de menor costo.** Se usa el algoritmo A* (un método clásico y rápido para
    encontrar caminos en mapas). Con la red de Bogotá tarda menos de un segundo en un celular.
@@ -109,6 +130,30 @@ celular del usuario.** Así no necesitamos un servidor encendido las 24 horas.
 > coordenadas, el riesgo será por calle. Si solo publica totales por zona (localidad, UPZ o
 > cuadrante), el riesgo será por zona: funciona, pero es menos fino. El plan contempla ambos
 > casos.
+
+### Moderación de reportes ciudadanos: Claude y tú
+
+Un reporte falso podría desviar a la gente o estigmatizar una cuadra. Por eso cada reporte pasa
+por tres filtros antes de influir en una ruta:
+
+1. **Filtros automáticos (instantáneos).** Casilla "no soy un robot" (Turnstile), un máximo de
+   reportes por dispositivo al día, rechazo de puntos fuera de Bogotá y formulario cerrado:
+   categoría fija más un texto opcional de máximo 140 caracteres. Sin fotos ni nombres, para no
+   exponer a nadie.
+2. **Claude (una vez al día).** Una tarea programada de Claude Code revisa los reportes pendientes
+   siguiendo reglas escritas en `docs/moderacion.md`. Funciona como esta sesión, pero automática.
+   Aprueba los claros, rechaza el spam y los insultos, y te deja los dudosos con un resumen. No
+   tiene costo adicional porque usa tu plan de Claude, y cada decisión queda registrada con su motivo.
+3. **Tú (cuando haya dudas).** Resuelves los dudosos desde el panel de Supabase y puedes revertir
+   cualquier decisión de Claude.
+
+Reglas de protección adicionales:
+
+- Un reporte aislado se muestra como aviso, pero **no cambia rutas**. Hacen falta al menos 2
+  reportes de dispositivos distintos en la misma zona en 7 días, para que una sola persona no
+  pueda manipular el sistema.
+- Los reportes caducan a los 30 días.
+- La app no es un canal de emergencias: siempre muestra "Si estás en peligro, llama al 123".
 
 ## 4. Stack propuesto (y por qué)
 
@@ -145,6 +190,7 @@ celular del usuario.** Así no necesitamos un servidor encendido las 24 horas.
 traza-segura/
 ├── README.md            ← este documento
 ├── PLAN.md              ← fases de trabajo
+├── docs/                ← fuentes de datos, decisiones, reglas de moderación
 ├── pipeline/            ← scripts de Python que preparan los datos (Fases 1–2)
 ├── web/                 ← la aplicación que ve el usuario (Fases 3–6)
 │   └── public/data/     ← archivos generados por la tubería (grafo, mapa de calor)
@@ -155,12 +201,16 @@ traza-segura/
 
 - **Delitos:** Secretaría Distrital de Seguridad, Convivencia y Justicia de Bogotá, publicados en
   [Datos Abiertos Bogotá](https://datosabiertos.bogota.gov.co/organization/secretaria-distrital-de-seguridad-convivencia-y-justicia)
-  y servicios ArcGIS REST. Verificaremos la licencia exacta de cada conjunto en la Fase 1.
+  con licencia **CC BY-SA 4.0**: se pueden usar libremente citando la fuente, y lo que derivemos
+  de ellos (por ejemplo, el riesgo por calle) se comparte con la misma licencia. El detalle de cada
+  fuente está en [docs/fuentes.md](docs/fuentes.md).
+- **Movilidad (ciclorrutas, siniestros viales):** IDU y Secretaría de Movilidad, licencia CC BY 4.0.
 - **Calles:** © colaboradores de OpenStreetMap, licencia ODbL. La app debe mostrar esa
   atribución en el mapa.
 - **Datos personales:** no se guardan rutas, orígenes ni destinos. Los reportes ciudadanos son
-  anónimos y no almacenan IP ni identificadores. Esto se alinea con la Ley 1581 de 2012
-  (Habeas Data).
+  anónimos: no guardan IP, nombre ni teléfono. Solo guardan un código aleatorio del dispositivo,
+  que no revela quién eres y sirve para que una misma persona no pueda reportar lo mismo muchas
+  veces. Esto se alinea con la Ley 1581 de 2012 (Habeas Data).
 - **Aviso al usuario:** "Traza Segura muestra riesgo relativo según delitos denunciados. No
   garantiza tu seguridad. Mantente atento a tu entorno."
 
@@ -174,3 +224,12 @@ traza-segura/
 - **GitHub Actions:** robot de GitHub que ejecuta tareas automáticamente (por ejemplo, cada mes).
 - **Estático:** archivos que se sirven tal cual, sin un servidor "pensando" por detrás. Por eso
   es gratis.
+- **Localidad / UPZ / cuadrante:** divisiones de Bogotá de mayor a menor tamaño. Hay 20
+  localidades y más de 100 UPZ (Unidades de Planeamiento Zonal). Los cuadrantes son las zonas
+  que patrulla cada equipo de la Policía y son más pequeños que una UPZ.
+- **SIEDCO:** sistema de la Policía Nacional donde se registran las denuncias de delitos; de ahí
+  salen las cifras oficiales.
+- **Derecho de petición:** solicitud formal y gratuita a una entidad pública, que debe responder
+  en un plazo legal.
+- **CC BY-SA:** licencia de datos abiertos: puedes usarlos citando la fuente y compartiendo lo
+  que derives con la misma licencia.
