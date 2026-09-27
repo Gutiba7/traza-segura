@@ -18,12 +18,12 @@ posterior se vea de inmediato en tu celular. Es más motivador y detecta problem
 
 | # | Paso | ✅ Verificación |
 |---|---|---|
-| 0.1 | Crear la carpeta `web/` de la aplicación (`docs/`, `pipeline/` y `.gitignore` ya existen). | Ves las carpetas en GitHub. |
-| 0.2 | Página mínima con un mapa de Bogotá (MapLibre + OpenFreeMap). | Abres el enlace y ves Bogotá, puedes hacer zoom. |
-| 0.3 | Publicación automática en GitHub Pages cada vez que se aprueba un cambio. | El enlace `https://gutiba7.github.io/traza-segura/` funciona en tu celular. |
-| 0.4 | Revisión automática (pruebas) en cada *pull request*. | Aparece una ✔ verde en GitHub. |
+| 0.1 | ✅ **Hecho.** Carpeta `web/` con la aplicación (Vite + TypeScript + MapLibre). | Ves las carpetas en GitHub. |
+| 0.2 | ✅ **Hecho.** Página con el mapa de Bogotá, probada en tamaño computador y celular. | Abres el enlace y ves Bogotá, puedes hacer zoom. |
+| 0.3 | Publicación automática en GitHub Pages cada vez que se aprueba un cambio. El flujo `publicar.yml` ya está listo; falta activar Pages y pasar los cambios a `main`. | El enlace `https://gutiba7.github.io/traza-segura/` funciona en tu celular. |
+| 0.4 | ✅ **Hecho.** Pruebas automáticas en cada cambio (`pruebas.yml`): tubería de datos y aplicación. | Aparece una ✔ verde en GitHub. |
 
-🧑 Activar GitHub Pages en *Settings → Pages → Source: GitHub Actions* (te guío con capturas).
+🧑 Activar GitHub Pages en *Settings → Pages → Build and deployment → Source: GitHub Actions*.
 
 ---
 
@@ -36,10 +36,10 @@ tipo y, si existe, franja horaria.
 |---|---|---|
 | 1.1 | ✅ **Hecho.** Inventario de fuentes: servidor ArcGIS de la Secretaría, Datos Abiertos Bogotá, Policía Nacional en datos.gov.co y capas complementarias (siniestros viales, alumbrado, ciclorrutas, seguridad nocturna). | [`docs/fuentes.md`](docs/fuentes.md) y el script `pipeline/explorar_fuentes.py`. |
 | 1.2 | ✅ **Decidido.** Las denuncias por localidad dicen *cuánto* hubo y las llamadas a la Línea 123 por **sector catastral** (1.170 zonas) dicen *dónde*, con suavizado bayesiano y solo delitos de calle. Supuestos comprobados con datos reales. | [`docs/metodologia.md`](docs/metodologia.md), con fórmulas y evidencia. |
-| 1.3 | Script de descarga desde **Datos Abiertos Bogotá** e **IDECA**: incidentes reportados por sector catastral, delitos de alto impacto por localidad, llamadas a la 123 por UPZ, hexágonos de robo de bicicletas y auditoría nocturna. El servidor ArcGIS de la Secretaría no responde desde fuera de Colombia, así que la actualización automática no puede depender de él. | Los totales descargados coinciden con los que publica la Secretaría en sus boletines. |
+| 1.3 | *En curso:* ya se descarga y prepara la capa de llamadas por sector catastral. Script de descarga desde **Datos Abiertos Bogotá** e **IDECA**: incidentes reportados por sector catastral, delitos de alto impacto por localidad, llamadas a la 123 por UPZ, hexágonos de robo de bicicletas y auditoría nocturna. El servidor ArcGIS de la Secretaría no responde desde fuera de Colombia, así que la actualización automática no puede depender de él. | Los totales descargados coinciden con los que publica la Secretaría en sus boletines. |
 | 1.4 | Diccionario y limpieza. ✅ Ya descifrados los 9 códigos de llamadas por sector (coincidencia exacta con la Línea 123). Falta: confirmar los códigos de denuncias y la categoría `MM`, validar "vehículo hurtado" y "violencia sexual" por UPZ, y unificar nombres de zonas. | Tabla de códigos en `docs/metodologia.md` (12.1) y un reporte "X zonas → Y válidas". |
 | 1.5 | Tabla de pesos por tipo de delito **para cada modo** (a pie, bici, carro). | Tabla en `docs/pesos.md` que tú apruebas o ajustas. |
-| 1.6 | Mapa de prueba con las zonas coloreadas sobre Bogotá. | Ves el mapa y los datos caen donde deben (no en el mar ni en Villavicencio). |
+| 1.6 | ✅ **Hecho.** Mapa de prueba con las llamadas por hurto por km² en cada sector catastral (`pipeline/preparar_sectores.py`). Se verá en el enlace al publicar. | Ves el mapa y los datos caen donde deben (no en el mar ni en Villavicencio). |
 | 1.7 | *(En paralelo)* Enviar el [derecho de petición](docs/derecho-de-peticion.md) para pedir datos más detallados (por cuadrante o por punto, con hora). | Radicado de la petición; respuesta en 10 días hábiles. |
 | 1.8 | ✅ **Hecho.** `CifrasSCJ` tiene lo mismo que Datos Abiertos, pero le faltan las capas 1 y 6 (probablemente delitos por UPZ y por sector catastral, ya no públicos). `SIEDCO_Delitos_Pub` exige usuario de la Secretaría. | Captura revisada; hallazgos en `docs/fuentes.md`. |
 

@@ -6,9 +6,10 @@ Traza Segura es una aplicación web instalable (PWA) que, dados un punto de orig
 destino en Bogotá, calcula el camino que **evita las zonas con más delitos registrados**,
 aceptando un pequeño desvío a cambio de más tranquilidad.
 
-> Estado actual: **planeación y exploración de datos** (paso 1.1 terminado: ver
-> [docs/fuentes.md](docs/fuentes.md)). La app todavía no existe. El plan de trabajo está en
-> [PLAN.md](PLAN.md).
+> Estado actual: **Fase 0 lista y Fase 1 en curso.** Ya existe una primera versión de la app con
+> el mapa de Bogotá y una capa de datos reales (llamadas a la Línea 123 por hurto, por sector
+> catastral). Todavía no calcula rutas. El plan de trabajo está en [PLAN.md](PLAN.md); las fuentes,
+> en [docs/fuentes.md](docs/fuentes.md), y las matemáticas, en [docs/metodologia.md](docs/metodologia.md).
 
 ---
 
