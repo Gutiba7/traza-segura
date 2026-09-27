@@ -1,0 +1,23 @@
+# Consulta las fuentes de datos de delitos y publica un inventario en el resumen de la ejecución.
+# Solo lee información pública; no guarda ni modifica nada en el repositorio.
+name: Explorar fuentes de datos
+
+on:
+  push:
+    branches: ["claude/**"]
+    paths:
+      - "pipeline/explorar_fuentes.py"
+      - ".github/workflows/explorar-fuentes.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  explorar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inventariar fuentes
+        run: python3 pipeline/explorar_fuentes.py
