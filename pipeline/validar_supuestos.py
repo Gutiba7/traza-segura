@@ -14,22 +14,14 @@ Uso: python3 pipeline/validar_supuestos.py
 """
 import csv
 import io
-import json
 import math
 import os
 import statistics
-import zipfile
 from collections import defaultdict
 from itertools import combinations
 
-from explorar_fuentes import abrir, decodificar, descargar, lineas, p
-
-DATOS = "https://datosabiertos.bogota.gov.co/dataset"
-IR_ANUAL = f"{DATOS}/ac8ebc76-583c-4c3b-9a2b-0f3791d63886/resource/2a4b73fd-93a7-4b08-8c20-b6ea22182a47/download/ir_geojson.zip"
-IR_ENE_AGO = f"{DATOS}/ac8ebc76-583c-4c3b-9a2b-0f3791d63886/resource/ef95540b-f224-4452-a2d4-30d956942a04/download/ir_geojson.zip"
-DAI_ANUAL = f"{DATOS}/7b270013-42ca-436b-9c1e-3bcb7d280c6b/resource/fc846aa6-68a9-456a-bdd3-f0284e162bd4/download/dai_geojson.zip"
-NUSE = (f"{DATOS}/9bdf518e-b756-4865-983f-0521111fbcd1/resource/30d65a8b-d0ed-4e95-977e-0d7cc2ea89ef/download/"
-        "datos-abiertllamadastramitadas-c4-bogota_numerounicodeseguridadyemergencias-nuse_linea-123os-nus.csv")
+from datos_abiertos import DAI_ANUAL, IR_ANUAL, IR_ENE_AGO, NUSE, area_km2, campo, capa, capas
+from explorar_fuentes import abrir, lineas, p
 
 CODIGOS_IR = ["R", "N", "AOP", "MM", "M", "D", "PIA", "H", "HC"]
 # Pares (código de llamadas, código de denuncias) que deberían moverse juntos si ambas fuentes
@@ -38,32 +30,6 @@ PARES = [("H", "HP"), ("H", "HCE"), ("H", "HB"), ("D", "H"), ("R", "LP"), ("MM",
 
 
 # ---------------------------------------------------------------- utilidades
-
-def campo(props, codigo, anio):
-    """Valor de CM<código><aa>CONT. Los nombres largos vienen recortados a 10 letras (CMAOP25CON)."""
-    prefijo = f"CM{codigo}{anio % 100:02d}"
-    for nombre, valor in props.items():
-        if nombre.startswith(prefijo) and "CONT".startswith(nombre[len(prefijo):]):
-            return float(valor or 0)
-    return None
-
-
-def capas(url):
-    """Descarga un .zip de Datos Abiertos y devuelve {nombre de archivo: lista de elementos}."""
-    datos, err = descargar(url)
-    if err:
-        raise SystemExit(f"No se pudo descargar {url}: {err}")
-    with zipfile.ZipFile(io.BytesIO(datos)) as z:
-        return {os.path.basename(n): json.loads(decodificar(z.read(n)))["features"]
-                for n in z.namelist() if n.lower().endswith(".geojson")}
-
-
-def capa(archivos, sufijo):
-    for nombre, elementos in archivos.items():
-        if nombre.lower().endswith(f"{sufijo.lower()}.geojson"):
-            return elementos
-    raise SystemExit(f"No hay capa *{sufijo}.geojson en {list(archivos)}")
-
 
 def pearson(x, y):
     mx, my = statistics.fmean(x), statistics.fmean(y)
@@ -89,24 +55,6 @@ def rangos(v):
 
 def spearman(x, y):
     return pearson(rangos(x), rangos(y))
-
-
-def area_km2(geometria):
-    """Área aproximada de un polígono (proyección local; error < 1 % en Bogotá)."""
-    if not geometria:
-        return 0.0
-    poligonos = [geometria["coordinates"]] if geometria["type"] == "Polygon" else geometria["coordinates"]
-    total = 0.0
-    for poligono in poligonos:
-        for i, anillo in enumerate(poligono):
-            if abs(anillo[0][0]) > 1000:  # ya viene en metros
-                xs, ys = [c[0] for c in anillo], [c[1] for c in anillo]
-            else:  # grados: se pasan a metros alrededor de la latitud de Bogotá
-                xs = [c[0] * 111_320 * math.cos(math.radians(4.65)) for c in anillo]
-                ys = [c[1] * 110_574 for c in anillo]
-            a = abs(sum(xs[k] * ys[k + 1] - xs[k + 1] * ys[k] for k in range(len(anillo) - 1))) / 2
-            total += a if i == 0 else -a
-    return total / 1e6
 
 
 # ---------------------------------------------------------------- 1. Diccionario de códigos

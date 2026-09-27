@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="description" content="La ruta más segura por Bogotá, aunque no sea la más corta." />
+    <title>Traza Segura</title>
+  </head>
+  <body>
+    <div id="mapa" role="application" aria-label="Mapa de Bogotá"></div>
+
+    <header class="tarjeta barra">
+      <h1>Traza Segura</h1>
+      <span class="etiqueta">Vista de prueba</span>
+    </header>
+
+    <aside class="tarjeta panel" aria-labelledby="titulo-panel">
+      <h2 id="titulo-panel">Llamadas a la Línea 123 por hurto</h2>
+      <p class="sub">Por km² en cada sector catastral · <span id="anio">2025</span></p>
+      <div id="leyenda" class="leyenda" role="list" aria-label="Leyenda">Cargando datos…</div>
+      <p class="nota">
+        Primera capa de datos reales, para comprobar que caen donde deben. Todavía no es el riesgo de
+        las rutas: ese cálculo llega en la Fase 2. Más llamadas no significa por sí solo más peligro;
+        también reflejan cuánta gente pasa por la zona.
+      </p>
+      <p class="fuente" id="fuente">
+        Fuente: Secretaría Distrital de Seguridad, Convivencia y Justicia · Datos Abiertos Bogotá (CC BY-SA 4.0).
+      </p>
+    </aside>
+
+    <div id="detalle" class="tarjeta detalle" role="status" aria-live="polite" hidden></div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
