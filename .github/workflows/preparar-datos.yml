@@ -1,4 +1,4 @@
-# Prueba la tubería con los datos oficiales reales cada vez que cambia (antes de publicar).
+# Prueba la tubería con los datos reales cada vez que cambia (antes de publicar).
 name: Preparar datos
 
 on:
@@ -15,12 +15,33 @@ permissions:
 jobs:
   preparar:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v7
-      - name: Preparar la capa de sectores
-        run: python3 pipeline/preparar_sectores.py web/public/data
-      # Copia comprimida de la capa en el registro, para revisarla desde un entorno de trabajo que
-      # no puede descargar los artefactos de GitHub.
-      - name: Copia de la capa para revisión
-        run: gzip -9c web/public/data/sectores.geojson | base64 -w 8000 | sed 's/^/CAPA:/'
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pipeline/requirements.txt
+      - run: pip install -r pipeline/requirements.txt
+      - name: Mes actual (la descarga de calles se reutiliza durante el mes)
+        id: mes
+        run: echo "mes=$(date -u +%Y-%m)" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v6
+        with:
+          path: .cache/osmnx
+          key: calles-osm-${{ steps.mes.outputs.mes }}
+      - name: Construir grafos de calles con riesgo
+        env:
+          TS_MUESTRA: "1"
+        run: python pipeline/construir_grafo.py web/public/data
+      - name: Tamaño de los archivos
+        run: ls -la web/public/data
+      # Copia comprimida de los grafos de muestra y de la capa de sectores en el registro, para
+      # revisarlos desde un entorno de trabajo que no puede descargar los artefactos de GitHub.
+      - name: Copia para revisión
+        run: |
+          cd web/public/data
+          for f in muestra-pie.bin.gz muestra-bici.bin.gz muestra-carro.bin.gz sectores.geojson meta.json; do
+            gzip -9c "$f" | base64 -w 8000 | sed "s/^/ARCHIVO:$f:/"
+          done

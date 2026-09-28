@@ -1,0 +1,2 @@
+# Dependencias de la tubería de datos que construye los grafos de calles.
+osmnx==2.1.1

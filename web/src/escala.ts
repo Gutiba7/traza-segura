@@ -13,6 +13,12 @@ export const BOGOTA = {
  */
 export const RAMPA = ["#b7d3f6", "#6da7ec", "#2a78d6", "#1c5cab", "#0d366b"];
 
+/**
+ * Cortes fijos del riesgo relativo (1 = promedio de Bogotá) para el mapa de zonas y la franja de
+ * cada ruta. A diferencia de los cuantiles, significan lo mismo en todos los modos.
+ */
+export const CORTES_RIESGO = [0.6, 0.85, 1.2, 2];
+
 export interface Clases {
   /** Valores donde empieza cada clase a partir de la segunda (siempre crecientes). */
   cortes: number[];

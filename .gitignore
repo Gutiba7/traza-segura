@@ -9,3 +9,6 @@ __pycache__/
 web/node_modules/
 web/dist/
 web/public/data/
+
+# Descargas de OpenStreetMap que guarda la tubería
+.cache/

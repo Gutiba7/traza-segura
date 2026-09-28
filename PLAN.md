@@ -20,10 +20,8 @@ posterior se vea de inmediato en tu celular. Es más motivador y detecta problem
 |---|---|---|
 | 0.1 | ✅ **Hecho.** Carpeta `web/` con la aplicación (Vite + TypeScript + MapLibre). | Ves las carpetas en GitHub. |
 | 0.2 | ✅ **Hecho.** Página con el mapa de Bogotá, probada en tamaño computador y celular. | Abres el enlace y ves Bogotá, puedes hacer zoom. |
-| 0.3 | Publicación automática en GitHub Pages cada vez que se aprueba un cambio. El flujo `publicar.yml` ya está listo; falta activar Pages y pasar los cambios a `main`. | El enlace `https://gutiba7.github.io/traza-segura/` funciona en tu celular. |
+| 0.3 | ✅ **Hecho.** Publicación automática en GitHub Pages cada vez que se aprueba un cambio. | El enlace `https://gutiba7.github.io/traza-segura/` funciona en tu celular. |
 | 0.4 | ✅ **Hecho.** Pruebas automáticas en cada cambio (`pruebas.yml`): tubería de datos y aplicación. | Aparece una ✔ verde en GitHub. |
-
-🧑 Activar GitHub Pages en *Settings → Pages → Build and deployment → Source: GitHub Actions*.
 
 ---
 
@@ -55,12 +53,12 @@ de viaje** (a pie, bicicleta, carro/moto).
 
 | # | Paso | ✅ Verificación |
 |---|---|---|
-| 2.1 | Descargar de OpenStreetMap las tres redes del perímetro urbano de Bogotá (con OSMnx): **a pie** (andenes y calles), **bici** (incluye ciclorrutas) y **carro** (respeta los sentidos de las vías). | Conteo de esquinas y tramos de cada red y un mapa de cada una. |
-| 2.2 | Asignar el riesgo a los tramos: reparto de las denuncias entre sectores según las llamadas, suavizado bayesiano empírico con los sectores vecinos, peso por antigüedad (vida media de un año) y promedio ponderado en los tramos que son límite entre sectores. Ver `docs/metodologia.md`, secciones 3 a 7. | Mapa donde las calles se colorean de verde a rojo. |
-| 2.3 | Puntaje distinto por modo, con la tabla de pesos aprobada en 1.5: a pie pesa el hurto a personas; en bici, el hurto de bicicletas; en carro, el hurto en vía y de vehículos. | Tres mapas; el de bici debe resaltar zonas distintas al de peatón. |
+| 2.1 | ✅ **Hecho.** Descargar de OpenStreetMap las tres redes del perímetro urbano de Bogotá (con OSMnx): **a pie** (andenes y calles), **bici** (incluye ciclorrutas) y **carro** (respeta los sentidos de las vías). En bici y carro se deja la parte de la red donde se puede ir y volver entre cualquier par de esquinas. | A pie: 153.560 esquinas y 11.705 km de calles; bici: 96.829 y 9.391 km; carro: 61.849 y 7.152 km. |
+| 2.2 | *Casi listo:* riesgo por tramo con suavizado bayesiano empírico con los sectores vecinos, peso por antigüedad (vida media de un año) y promedio en los tramos que son límite entre sectores (`pipeline/riesgo.py`, `pipeline/construir_grafo.py`). Falta el reparto de las denuncias por localidad entre sectores (sección 5 de la metodología). | Mapa de zonas en la app y pruebas automáticas con un mapa de ejemplo. |
+| 2.3 | ✅ **Hecho, con pesos provisionales.** Puntaje distinto por modo: a pie pesa más el hurto a personas; en carro, los disparos y el hurto, sin riñas. Los pesos definitivos salen del paso 1.5. | El mapa de zonas cambia al elegir bici o carro. |
 | 2.4 | Dos puntajes por tramo, **día** y **noche**. De noche se suma la auditoría nocturna de la Secretaría de la Mujer (iluminación, visibilidad, presencia de personas); en bici se usan además las franjas horarias de robos. | Dos mapas; el de noche debe verse distinto al de día. |
-| 2.5 | Expresar el riesgo como **riesgo relativo** (1 = promedio de la ciudad), con un tope de 5 para que un valor extremo no domine. *Corrige el plan original, que usaba percentiles: sumar percentiles no tiene significado matemático.* Los percentiles quedan solo para colorear el mapa. | Histograma del riesgo: la mayoría de calles cerca de 1, pocas por encima de 3. |
-| 2.6 | Exportar tres archivos compactos: `grafo-pie.bin`, `grafo-bici.bin`, `grafo-carro.bin`. | Cada archivo ≤ 10 MB (comprimido, idealmente ≤ 5 MB). |
+| 2.5 | ✅ **Hecho.** Riesgo como **riesgo relativo** (1 = promedio de la ciudad), con un tope de 5. *Corrige el plan original, que usaba percentiles: sumar percentiles no tiene significado matemático.* | A pie, por sector: mediana 1,0; el 95 % queda por debajo de 1,9; máximo 3,5 (el tope no se alcanza). |
+| 2.6 | ✅ **Hecho.** Tres archivos compactos: `grafo-pie.bin.gz`, `grafo-bici.bin.gz`, `grafo-carro.bin.gz` (formato en `pipeline/formato_grafo.py`). Se reconstruyen en cada publicación; la descarga de calles se reutiliza durante el mes. | 2,6 MB, 1,7 MB y 1,1 MB (meta: ≤ 5 MB). |
 | 2.7 | Prueba de sentido común: 5 calles que tú conoces bien y su puntaje en cada modo. Se comparan dos versiones de la exposición (por kilómetro de calle y por actividad: censo más uso comercial), porque dividir solo por kilómetros castiga de más a las calles concurridas. | Tú confirmas cuál versión "tiene sentido" o la ajustamos. |
 
 ---
@@ -72,16 +70,16 @@ más rápida. Se construye **a pie primero**; bici y carro reutilizan el mismo m
 
 | # | Paso | ✅ Verificación |
 |---|---|---|
-| 3.1 | La app descarga el grafo del modo elegido y lo guarda en el teléfono. | Segunda visita carga casi instantánea. |
-| 3.2 | Elegir origen y destino tocando el mapa o con "Mi ubicación". | Aparecen dos marcadores. |
-| 3.3 | Algoritmo A* con costo `tiempo × (1 + α × riesgo)`, **a pie**. | Dibuja una ruta que sigue calles reales. |
-| 3.4 | Mostrar las dos rutas (segura y rápida) con: distancia, minutos, % de riesgo evitado. Si la diferencia es menor al 10 %, la app dice "riesgo similar" en vez de presumir una diferencia que está dentro del ruido. | Tarjeta resumen legible. |
-| 3.5 | Deslizador "más seguro ↔ más corto" y selector día/noche. | Al moverlo, la ruta cambia. |
-| 3.6 | Selector de modo **🚶 / 🚲 / 🚗** usando los grafos de bici y carro. | En carro la ruta respeta los sentidos viales; en bici aprovecha ciclorrutas. |
+| 3.1 | *A medias:* la app descarga el grafo del modo elegido la primera vez que lo necesitas, con barra de avance. Guardarlo para usarlo sin conexión llega con la Fase 6. | Segunda visita carga casi instantánea. |
+| 3.2 | ✅ **Hecho.** Elegir origen y destino tocando el mapa, escribiendo o con "Mi ubicación". Los marcadores se pueden arrastrar y el recorrido queda en el enlace para compartirlo. | Aparecen dos marcadores. |
+| 3.3 | ✅ **Hecho.** Algoritmo A\* con costo `tiempo × (1 + α × riesgo)`, en el teléfono (`web/src/grafo.ts`). | Dibuja una ruta que sigue calles reales. |
+| 3.4 | ✅ **Hecho.** Las dos rutas (tranquila y rápida) con minutos, distancia, % de riesgo evitado, franja de riesgo a lo largo del camino y los sectores que evita. Si la diferencia es menor al 10 %, dice "riesgo parecido". | Tarjeta resumen legible. |
+| 3.5 | *A medias:* ✅ selector "¿cuánto pesa la tranquilidad?" (Poco, Moderado, Bastante; calibrado con trayectos reales). Falta el selector día/noche (depende de 2.4). | Al moverlo, la ruta cambia. |
+| 3.6 | ✅ **Hecho.** Selector de modo **a pie / en bici / en carro**. | En carro la ruta respeta los sentidos viales. |
 | 3.7 | Aviso en el destino para bici, moto y carro si la zona tiene muchos robos de vehículos. | Aparece al elegir un destino en una zona roja. |
-| 3.8 | Búsqueda de direcciones (Photon). | Escribes "Parque de la 93" y lo encuentra. |
-| 3.9 | **Medición de rendimiento** en un celular de gama media. | Ruta calculada en < 1 segundo a pie (hasta ~10 km) y en < 2 segundos en carro (hasta ~30 km). Si no se cumple, activamos el plan B (servidor de rutas). |
-| 3.10 | Pruebas automáticas con rutas conocidas en los tres modos. | ✔ verde en GitHub. |
+| 3.8 | ✅ **Hecho.** Búsqueda de lugares con Photon, limitada a Bogotá. | Escribes "Parque Nacional" y lo encuentra. |
+| 3.9 | *A medias:* en computador, tres rutas a pie por el centro se calculan en 0,04 s. Falta medir en un celular de gama media. | Ruta calculada en < 1 segundo a pie (hasta ~10 km) y en < 2 segundos en carro (hasta ~30 km). Si no se cumple, activamos el plan B (servidor de rutas). |
+| 3.10 | ✅ **Hecho.** Pruebas automáticas: A\* da el mismo resultado que una búsqueda exhaustiva en 225 rutas al azar, respeta los sentidos y rodea el riesgo. | ✔ verde en GitHub. |
 
 ---
 

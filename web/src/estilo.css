@@ -1,16 +1,20 @@
 /* Traza Segura: estilo editorial y sobrio. Papel cálido, tinta azul oscuro, líneas finas en vez de
-   sombras y un solo acento amarillo reservado para el logo. El mapa base es claro, así que por ahora
-   la interfaz también (el modo oscuro llega con la Fase 6). */
+   sombras y un solo acento amarillo (el destino, como en el logo). El mapa base es claro, así que
+   por ahora la interfaz también (el modo oscuro llega con la Fase 6). */
 
 :root {
   color-scheme: light;
   --papel: #fbfaf7;
+  --papel-hundido: #f3f1ec;
   --tinta: #14213d;
   --texto: #1f2430;
   --texto-suave: #5b5f69;
   --linea: #e4e1d9;
   --linea-fuerte: #cfcbc1;
-  --ancho-hoja: 380px;
+  --acento: #f2b705;
+  --gris-ruta: #6b7280;
+  --problema: #9a3412;
+  --ancho-hoja: 392px;
   --serif: "Fraunces Variable", Georgia, "Times New Roman", serif;
   --sans: "IBM Plex Sans Variable", system-ui, -apple-system, "Segoe UI", sans-serif;
   font-family: var(--sans);
@@ -36,6 +40,12 @@ a {
   color: var(--tinta);
   text-decoration-thickness: 1px;
   text-underline-offset: 3px;
+}
+
+button,
+input {
+  font: inherit;
+  color: inherit;
 }
 
 :focus-visible {
@@ -71,6 +81,26 @@ a {
   font-size: 11px;
 }
 
+.marcador {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 3px solid var(--tinta);
+  background: var(--papel);
+  box-shadow: 0 0 0 2px rgb(255 255 255 / 0.9), 0 2px 6px rgb(20 33 61 / 0.35);
+  cursor: grab;
+}
+
+.marcador.destino {
+  width: 22px;
+  height: 22px;
+  background: var(--acento);
+}
+
+.insignia {
+  display: none;
+}
+
 /* ---------------------------------------------------------------- Hoja (panel) */
 
 .hoja {
@@ -78,7 +108,7 @@ a {
   inset: 0 auto 0 0;
   width: var(--ancho-hoja);
   overflow-y: auto;
-  padding: 28px 28px 24px;
+  padding: 24px 28px 24px;
   background: var(--papel);
   border-right: 1px solid var(--linea);
   z-index: 2;
@@ -95,8 +125,8 @@ a {
 }
 
 .logo {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   flex: none;
 }
 
@@ -104,7 +134,7 @@ a {
   margin: 0;
   font-family: var(--serif);
   font-weight: 620;
-  font-size: 1.45rem;
+  font-size: 1.35rem;
   line-height: 1.1;
   letter-spacing: -0.01em;
   color: var(--tinta);
@@ -112,25 +142,11 @@ a {
 
 .lugar {
   margin: 3px 0 0;
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 500;
   letter-spacing: 0.09em;
   text-transform: uppercase;
   color: var(--texto-suave);
-}
-
-.lema {
-  margin: 28px 0 8px;
-  font-family: var(--serif);
-  font-size: 1.55rem;
-  font-weight: 420;
-  line-height: 1.22;
-  letter-spacing: -0.01em;
-  color: var(--tinta);
-}
-
-.bloque {
-  margin-top: 26px;
 }
 
 .rotulo {
@@ -144,17 +160,8 @@ a {
   color: var(--texto-suave);
 }
 
-.titulo {
-  margin: 0;
-  font-size: 1.02rem;
-  font-weight: 600;
-  color: var(--texto);
-}
-
-.medida {
-  margin: 2px 0 14px;
-  font-size: 0.85rem;
-  color: var(--texto-suave);
+.bloque {
+  margin-top: 22px;
 }
 
 .bloque p {
@@ -162,12 +169,641 @@ a {
   line-height: 1.55;
 }
 
+.medida {
+  margin: -4px 0 12px;
+  font-size: 0.85rem;
+  color: var(--texto-suave);
+}
+
 .cargando {
   margin: 0;
   color: var(--texto-suave);
 }
 
-/* ---------------------------------------------------------------- Escala */
+.nota {
+  margin: 8px 0 0;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: var(--texto-suave);
+}
+
+/* ---------------------------------------------------------------- Formulario: origen, destino y modo */
+
+.viaje {
+  margin-top: 26px;
+}
+
+.pregunta {
+  margin: 0 0 12px;
+  font-family: var(--serif);
+  font-size: 1.6rem;
+  font-weight: 450;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  color: var(--tinta);
+}
+
+.puntos {
+  position: relative;
+  border: 1px solid var(--linea-fuerte);
+  border-radius: 12px;
+  background: #fff;
+}
+
+/* Línea punteada que une el punto de origen con el de destino. */
+.puntos::before {
+  content: "";
+  position: absolute;
+  left: 20px;
+  top: 30px;
+  bottom: 30px;
+  border-left: 2px dotted var(--linea-fuerte);
+}
+
+.campo {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 6px 0 14px;
+  min-height: 52px;
+}
+
+.campo + .campo {
+  border-top: 1px solid var(--linea);
+  margin-left: 40px;
+  padding-left: 0;
+}
+
+.campo + .campo .punto-marca {
+  position: absolute;
+  left: -27px;
+}
+
+.punto-marca {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2.5px solid var(--tinta);
+  background: #fff;
+  z-index: 1;
+}
+
+.punto-marca.destino {
+  background: var(--acento);
+}
+
+.campo input {
+  flex: 1;
+  min-width: 0;
+  height: 44px;
+  padding: 0 4px;
+  border: 0;
+  background: transparent;
+  font-size: 0.95rem;
+  color: var(--texto);
+  text-overflow: ellipsis;
+}
+
+.campo input::placeholder {
+  color: #8a8d94;
+}
+
+.campo input:focus {
+  outline: none;
+}
+
+.campo:focus-within {
+  z-index: 3;
+}
+
+.puntos:focus-within {
+  border-color: var(--tinta);
+  box-shadow: 0 0 0 1px var(--tinta);
+}
+
+.icono {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--tinta);
+  cursor: pointer;
+}
+
+.icono:hover {
+  background: var(--papel-hundido);
+}
+
+.icono svg,
+.modos svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+svg .relleno {
+  fill: currentColor;
+  stroke: none;
+}
+
+.sugerencias {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: -1px;
+  right: -1px;
+  z-index: 5;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  background: #fff;
+  border: 1px solid var(--linea-fuerte);
+  border-radius: 10px;
+  box-shadow: 0 10px 24px rgb(20 33 61 / 0.14);
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.campo + .campo .sugerencias {
+  left: -41px;
+}
+
+.sugerencia {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.sugerencia[aria-selected="true"],
+.sugerencia:hover {
+  background: var(--papel-hundido);
+}
+
+.sugerencia-nombre {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.sugerencia-detalle,
+.sugerencia-vacia {
+  font-size: 0.78rem;
+  color: var(--texto-suave);
+}
+
+.sugerencia-vacia {
+  padding: 8px 10px;
+  line-height: 1.4;
+}
+
+.trayecto {
+  display: none;
+}
+
+/* Selector de modo: tres botones del mismo ancho. */
+.modos {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin: 10px 0 0;
+  padding: 0;
+  border: 0;
+}
+
+.modos label,
+.segmentos label {
+  position: relative;
+  display: block;
+}
+
+.modos input,
+.segmentos input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.modos span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 42px;
+  border: 1px solid var(--linea-fuerte);
+  border-radius: 10px;
+  font-size: 0.86rem;
+  font-weight: 500;
+  color: var(--texto);
+  background: #fff;
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease;
+}
+
+.modos span:hover {
+  border-color: var(--tinta);
+}
+
+.modos input:checked + span {
+  background: var(--tinta);
+  border-color: var(--tinta);
+  color: var(--papel);
+}
+
+.modos input:focus-visible + span,
+.segmentos input:focus-visible + span {
+  outline: 2px solid var(--tinta);
+  outline-offset: 2px;
+}
+
+/* ---------------------------------------------------------------- Resultado */
+
+.resultado {
+  margin-top: 22px;
+}
+
+.guia {
+  counter-reset: paso;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.guia li {
+  counter-increment: paso;
+  position: relative;
+  padding: 0 0 12px 34px;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--texto-suave);
+}
+
+.guia li::before {
+  content: counter(paso);
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--linea-fuerte);
+  border-radius: 50%;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--tinta);
+}
+
+.guia strong {
+  font-weight: 600;
+  color: var(--texto);
+}
+
+.ejemplo {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  width: 100%;
+  margin-top: 4px;
+  padding: 12px 14px;
+  border: 1px dashed var(--linea-fuerte);
+  border-radius: 10px;
+  background: transparent;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--texto-suave);
+  text-align: left;
+  cursor: pointer;
+}
+
+.ejemplo span {
+  font-size: 0.95rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--tinta);
+}
+
+.ejemplo:hover {
+  border-style: solid;
+  border-color: var(--tinta);
+}
+
+.titular {
+  margin: 0 0 14px;
+  font-family: var(--serif);
+  font-size: 1.3rem;
+  font-weight: 480;
+  line-height: 1.25;
+  color: var(--tinta);
+}
+
+.rutas {
+  display: grid;
+  gap: 2px;
+  border-top: 1px solid var(--linea);
+  border-bottom: 1px solid var(--linea);
+  padding: 6px 0;
+}
+
+.ruta {
+  display: grid;
+  grid-template-columns: 30px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 34px;
+  font-size: 0.9rem;
+}
+
+.trazo {
+  height: 5px;
+  border-radius: 3px;
+  background: var(--tinta);
+  box-shadow: 0 0 0 2px #fff, 0 0 0 3px var(--linea);
+}
+
+.ruta.rapida .trazo {
+  height: 3px;
+  background: repeating-linear-gradient(90deg, var(--gris-ruta) 0 6px, transparent 6px 10px);
+  box-shadow: none;
+}
+
+.ruta-nombre {
+  font-weight: 500;
+}
+
+.ruta.rapida .ruta-nombre {
+  color: var(--texto-suave);
+  font-weight: 400;
+}
+
+.ruta-cifras {
+  font-size: 0.85rem;
+  color: var(--texto-suave);
+  font-variant-numeric: tabular-nums;
+}
+
+.ruta-cifras strong {
+  font-family: var(--serif);
+  font-size: 1.1rem;
+  font-weight: 560;
+  color: var(--tinta);
+}
+
+.franjas {
+  margin-top: 16px;
+}
+
+.franjas-titulo {
+  margin: 0 0 8px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--texto-suave);
+}
+
+.franja-fila {
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.franja-nombre {
+  font-size: 0.75rem;
+  color: var(--texto-suave);
+}
+
+.franja {
+  display: flex;
+  height: 10px;
+  border-radius: 3px;
+  overflow: hidden;
+  background: var(--linea);
+}
+
+.franja span {
+  flex-basis: 0;
+  min-width: 1px;
+}
+
+.franja-ejes {
+  display: flex;
+  justify-content: space-between;
+  margin-left: 72px;
+  font-size: 0.68rem;
+  color: var(--texto-suave);
+}
+
+.explicacion {
+  margin: 14px 0 0;
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+.prioridad {
+  margin: 18px 0 0;
+  padding: 14px 0 0;
+  border: 0;
+  border-top: 1px solid var(--linea);
+}
+
+.prioridad legend {
+  float: left;
+  width: 100%;
+  margin-bottom: 8px;
+  padding: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.segmentos {
+  clear: both;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  padding: 3px;
+  border-radius: 10px;
+  background: var(--papel-hundido);
+}
+
+.segmentos span {
+  display: block;
+  padding: 7px 0;
+  border-radius: 7px;
+  text-align: center;
+  font-size: 0.84rem;
+  color: var(--texto-suave);
+  cursor: pointer;
+}
+
+.segmentos input:checked + span {
+  background: #fff;
+  color: var(--tinta);
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgb(20 33 61 / 0.15);
+}
+
+.calculo {
+  margin: 12px 0 0;
+  font-size: 0.7rem;
+  color: var(--texto-suave);
+}
+
+.mensaje {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.mensaje.problema {
+  padding-left: 12px;
+  border-left: 3px solid var(--problema);
+}
+
+.descarga {
+  --avance: 0;
+  position: relative;
+  margin-top: 10px;
+  height: 22px;
+  border-radius: 6px;
+  background: var(--papel-hundido);
+  font-size: 0.72rem;
+  line-height: 22px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  color: var(--tinta);
+  overflow: hidden;
+  z-index: 0;
+}
+
+.descarga::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: calc(var(--avance) * 100%);
+  background: #cfdcee;
+  transition: width 120ms linear;
+  z-index: -1;
+}
+
+/* ---------------------------------------------------------------- Explicaciones */
+
+.explica {
+  border-top: 1px solid var(--linea);
+}
+
+.explica summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--texto-suave);
+  cursor: pointer;
+  list-style: none;
+}
+
+.explica summary::-webkit-details-marker {
+  display: none;
+}
+
+.explica summary::after {
+  content: "";
+  width: 7px;
+  height: 7px;
+  margin-right: 4px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform 150ms ease;
+}
+
+.explica[open] summary::after {
+  transform: rotate(-135deg);
+}
+
+.explica + .explica {
+  margin-top: 0;
+}
+
+.pasos {
+  counter-reset: paso;
+  list-style: none;
+  margin: 0 0 8px;
+  padding: 0;
+}
+
+.pasos li {
+  counter-increment: paso;
+  position: relative;
+  padding-left: 34px;
+  margin-bottom: 12px;
+}
+
+.pasos li::before {
+  content: counter(paso);
+  position: absolute;
+  left: 0;
+  top: 1px;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--tinta);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--papel);
+}
+
+.pasos h3 {
+  margin: 0 0 2px;
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.pasos p {
+  margin: 0;
+  font-size: 0.86rem;
+  line-height: 1.55;
+  color: var(--texto-suave);
+}
+
+.limites {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 0.86rem;
+  line-height: 1.55;
+  color: var(--texto-suave);
+}
+
+.aviso {
+  margin: 10px 0 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--papel-hundido);
+  color: var(--texto);
+}
+
+/* ---------------------------------------------------------------- Escala de zonas */
 
 .escala-barra {
   display: flex;
@@ -218,41 +854,59 @@ a {
   color: var(--texto-suave);
 }
 
-/* ---------------------------------------------------------------- Cifras, avance y pie */
-
-.cifras {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  margin: 26px 0 0;
-  padding-top: 14px;
-  border-top: 1px solid var(--linea);
+.interruptor {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  font-size: 0.85rem;
+  cursor: pointer;
 }
 
-.cifras dt {
-  font-size: 0.72rem;
-  color: var(--texto-suave);
+.interruptor input {
+  appearance: none;
+  position: relative;
+  width: 34px;
+  height: 20px;
+  margin: 0;
+  border-radius: 10px;
+  background: var(--linea-fuerte);
+  cursor: pointer;
+  transition: background 150ms ease;
 }
 
-.cifras dd {
-  margin: 2px 0 0;
-  font-family: var(--serif);
-  font-size: 1.7rem;
-  font-weight: 500;
-  font-variant-numeric: lining-nums tabular-nums;
-  color: var(--tinta);
+.interruptor input::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 150ms ease;
 }
+
+.interruptor input:checked {
+  background: var(--tinta);
+}
+
+.interruptor input:checked::after {
+  transform: translateX(14px);
+}
+
+/* ---------------------------------------------------------------- Avance y pie */
 
 .avance {
   list-style: none;
   margin: 0;
   padding: 0;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
 }
 
 .avance li {
   position: relative;
-  padding: 5px 0 5px 24px;
+  padding: 4px 0 4px 24px;
   color: var(--texto-suave);
 }
 
@@ -279,7 +933,7 @@ a {
 }
 
 .pie {
-  margin-top: 30px;
+  margin-top: 26px;
   padding-top: 12px;
   border-top: 1px solid var(--linea);
   font-size: 0.75rem;
@@ -298,7 +952,7 @@ a {
   font-size: 0.8rem;
 }
 
-/* ---------------------------------------------------------------- Ficha de un sector */
+/* ---------------------------------------------------------------- Ficha de un sector y avisos */
 
 .ficha {
   position: fixed;
@@ -314,7 +968,8 @@ a {
   pointer-events: none;
 }
 
-.ficha[hidden] {
+.ficha[hidden],
+.aviso-flotante[hidden] {
   display: none;
 }
 
@@ -331,7 +986,7 @@ a {
 }
 
 .ficha-nombre {
-  margin: 2px 0 8px !important;
+  margin: 2px 0 6px !important;
   font-family: var(--serif);
   font-size: 1.15rem;
   font-weight: 560;
@@ -340,7 +995,8 @@ a {
 }
 
 .ficha-cifras {
-  font-size: 0.85rem;
+  font-size: 0.82rem;
+  line-height: 1.45;
   color: var(--texto-suave);
   font-variant-numeric: tabular-nums;
 }
@@ -354,19 +1010,35 @@ a {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-top: 10px !important;
+  margin-top: 8px !important;
   padding-top: 8px;
   border-top: 1px solid var(--linea);
   font-size: 0.78rem;
-  color: var(--texto-suave);
+  color: var(--texto);
 }
 
 .ficha-muestra {
   width: 18px;
   height: 10px;
   border-radius: 3px;
-  opacity: 0.72;
+  opacity: 0.8;
   flex: none;
+}
+
+.aviso-flotante {
+  position: fixed;
+  top: 16px;
+  left: calc(var(--ancho-hoja) + (100% - var(--ancho-hoja)) / 2);
+  transform: translateX(-50%);
+  z-index: 6;
+  max-width: min(420px, calc(100% - 32px));
+  padding: 10px 16px;
+  border-radius: 10px;
+  background: var(--tinta);
+  color: var(--papel);
+  font-size: 0.88rem;
+  line-height: 1.4;
+  box-shadow: 0 8px 20px rgb(20 33 61 / 0.25);
 }
 
 .sin-js {
@@ -384,11 +1056,39 @@ a {
     inset: 0;
   }
 
+  .insignia {
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 12px 5px 5px;
+    border: 1px solid var(--linea-fuerte);
+    border-radius: 999px;
+    background: var(--papel);
+    font-family: var(--serif);
+    font-size: 0.98rem;
+    font-weight: 620;
+    color: var(--tinta);
+  }
+
+  .insignia .logo {
+    width: 26px;
+    height: 26px;
+  }
+
+  .aviso-flotante {
+    top: 60px;
+    left: 50%;
+  }
+
   .hoja {
     inset: auto 0 0 0;
     width: auto;
-    max-height: 86dvh;
-    padding: 0 20px 20px;
+    max-height: 88dvh;
+    padding: 0 16px 20px;
     border-right: 0;
     border-top: 1px solid var(--linea-fuerte);
     border-radius: 18px 18px 0 0;
@@ -407,13 +1107,13 @@ a {
     display: block;
     position: sticky;
     top: 0;
-    width: calc(100% + 40px);
-    margin: 0 -20px 4px;
-    padding: 10px 0 12px;
+    width: calc(100% + 32px);
+    margin: 0 -16px;
+    padding: 10px 0 10px;
     border: 0;
     background: var(--papel);
     cursor: pointer;
-    z-index: 1;
+    z-index: 4;
   }
 
   .asa-barra {
@@ -425,43 +1125,110 @@ a {
     background: var(--linea-fuerte);
   }
 
-  .logo {
-    width: 32px;
-    height: 32px;
-  }
-
-  .nombre {
-    font-size: 1.2rem;
-  }
-
-  .lema {
+  .marca {
     display: none;
   }
 
-  .resumen {
-    margin-top: 16px;
+  .viaje {
+    margin-top: 0;
   }
 
-  .resumen .rotulo {
+  .pregunta {
+    font-size: 1.3rem;
+    margin-bottom: 10px;
+  }
+
+  .campo {
+    min-height: 48px;
+  }
+
+  .campo input {
+    font-size: 1rem; /* 16 px: evita que el iPhone acerque la página al escribir */
+  }
+
+  .modos span {
+    height: 40px;
+  }
+
+  /* Con una ruta en pantalla, el formulario se resume en una línea para dejar ver el mapa. */
+  .viaje.compacta .pregunta,
+  .viaje.compacta .puntos {
     display: none;
+  }
+
+  .viaje.compacta .trayecto {
+    display: block;
+    position: relative;
+    width: 100%;
+    height: 44px;
+    padding: 0 12px 0 32px;
+    border: 1px solid var(--linea-fuerte);
+    border-radius: 10px;
+    background: #fff;
+    font-size: 0.9rem;
+    font-weight: 500;
+    line-height: 42px;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+  }
+
+  .viaje.compacta .trayecto::before {
+    content: "";
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    width: 10px;
+    height: 10px;
+    margin-top: -5px;
+    border-radius: 50%;
+    border: 2px solid var(--tinta);
+    background: var(--acento);
+  }
+
+  .resultado {
+    display: flex;
+    flex-direction: column;
+    margin-top: 12px;
+  }
+
+  /* El ejemplo va primero para que se vea sin desplegar la hoja. */
+  .ejemplo {
+    order: -1;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: 8px;
+    margin: 0 0 14px;
+    padding: 9px 12px;
+  }
+
+  .ejemplo span {
+    font-size: 0.88rem;
+  }
+
+  .titular {
+    font-size: 1.15rem;
+    margin-bottom: 10px;
   }
 
   .maplibregl-ctrl-bottom-right {
     bottom: var(--asomar, 230px);
   }
 
-  .ficha.anclada {
-    top: 12px;
-    left: 12px;
-    right: 56px;
-    width: auto;
-    transform: none;
+  .maplibregl-ctrl-top-right {
+    top: 2px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .hoja,
-  .escala-tramo {
+  .escala-tramo,
+  .modos span,
+  .interruptor input,
+  .interruptor input::after {
     transition: none;
   }
 }
