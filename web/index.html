@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Traza Segura · Bogotá</title>
+    <meta name="description" content="La ruta más tranquila por Bogotá, no solo la más corta. Mapa con datos oficiales de seguridad." />
+    <meta name="theme-color" content="#14213d" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Traza Segura · Bogotá" />
+    <meta property="og:description" content="La ruta más tranquila por Bogotá, no solo la más corta." />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  </head>
+  <body>
+    <div id="mapa" role="application" aria-label="Mapa de Bogotá por sectores catastrales"></div>
+
+    <aside class="hoja" id="hoja" aria-label="Información del mapa">
+      <button class="asa" id="asa" type="button" aria-expanded="false" aria-controls="hoja">
+        <span class="asa-barra" aria-hidden="true"></span>
+        <span class="solo-lectores">Mostrar más información</span>
+      </button>
+
+      <header class="marca">
+        <svg class="logo" viewBox="0 0 32 32" aria-hidden="true">
+          <rect width="32" height="32" rx="8" fill="#14213d" />
+          <path d="M8.5 23.5c0-6 3-7.5 6.5-8.5s5.5-2.5 6-6" fill="none" stroke="#fbfaf7" stroke-width="2.4" stroke-linecap="round" />
+          <circle cx="8.5" cy="23.5" r="2.2" fill="#fbfaf7" />
+          <circle cx="21.5" cy="8.8" r="3.2" fill="#f2b705" />
+        </svg>
+        <div>
+          <h1 class="nombre">Traza Segura</h1>
+          <p class="lugar">Bogotá · Versión preliminar</p>
+        </div>
+      </header>
+
+      <p class="lema">La ruta más tranquila por Bogotá, no solo la más corta.</p>
+
+      <section class="bloque resumen" id="resumen" aria-labelledby="titulo-capa">
+        <h2 class="rotulo">En el mapa</h2>
+        <h3 class="titulo" id="titulo-capa">Llamadas a la Línea 123 por hurto</h3>
+        <p class="medida">Por km² en cada sector catastral, <span id="anio">2025</span></p>
+        <div class="escala" id="escala" aria-live="polite">
+          <p class="cargando">Cargando datos…</p>
+        </div>
+      </section>
+
+      <div class="cuerpo">
+        <dl class="cifras">
+          <div>
+            <dt>Sectores catastrales</dt>
+            <dd id="cifra-sectores">—</dd>
+          </div>
+          <div>
+            <dt>Llamadas por hurto</dt>
+            <dd id="cifra-llamadas">—</dd>
+          </div>
+        </dl>
+
+        <section class="bloque" aria-labelledby="titulo-lectura">
+          <h2 class="rotulo" id="titulo-lectura">Cómo leerlo</h2>
+          <p>
+            Es la materia prima del cálculo, no el riesgo en sí. Donde pasa más gente también hay más
+            llamadas: esa corrección llega con el riesgo por calle. Toca un sector para ver su detalle.
+          </p>
+        </section>
+
+        <section class="bloque" aria-labelledby="titulo-avance">
+          <h2 class="rotulo" id="titulo-avance">Avance</h2>
+          <ol class="avance">
+            <li class="hecho">Datos oficiales verificados</li>
+            <li class="hecho">Mapa por sectores catastrales</li>
+            <li>Riesgo por calle, de día y de noche</li>
+            <li>Rutas a pie, en bici y en carro</li>
+            <li>Reportes ciudadanos moderados</li>
+          </ol>
+        </section>
+
+        <footer class="pie">
+          <p id="fuente">
+            Datos: Secretaría Distrital de Seguridad, Convivencia y Justicia, vía Datos Abiertos Bogotá
+            (CC BY-SA 4.0).
+          </p>
+          <p>Mapa base: OpenFreeMap · © colaboradores de OpenStreetMap.</p>
+          <p class="enlaces">
+            <a href="https://github.com/Gutiba7/traza-segura/blob/main/docs/metodologia.md">Metodología</a>
+            <a href="https://github.com/Gutiba7/traza-segura">Código abierto</a>
+          </p>
+        </footer>
+      </div>
+    </aside>
+
+    <div id="ficha" class="ficha" role="status" aria-live="polite" hidden></div>
+
+    <noscript><p class="sin-js">Traza Segura necesita JavaScript para mostrar el mapa.</p></noscript>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

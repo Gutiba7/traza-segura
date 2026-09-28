@@ -1,0 +1,11 @@
+# Archivos temporales de Python
+__pycache__/
+*.pyc
+
+# Datos descargados o generados localmente (no se suben al repositorio)
+/datos/
+
+# Aplicación web: dependencias, compilación y datos que genera la tubería al publicar
+web/node_modules/
+web/dist/
+web/public/data/

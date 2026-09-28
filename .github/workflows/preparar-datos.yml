@@ -1,0 +1,26 @@
+# Prueba la tubería con los datos oficiales reales cada vez que cambia (antes de publicar).
+name: Preparar datos
+
+on:
+  push:
+    branches: ["claude/**"]
+    paths:
+      - "pipeline/**"
+      - ".github/workflows/preparar-datos.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  preparar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - name: Preparar la capa de sectores
+        run: python3 pipeline/preparar_sectores.py web/public/data
+      # Copia comprimida de la capa en el registro, para revisarla desde un entorno de trabajo que
+      # no puede descargar los artefactos de GitHub.
+      - name: Copia de la capa para revisión
+        run: gzip -9c web/public/data/sectores.geojson | base64 -w 8000 | sed 's/^/CAPA:/'

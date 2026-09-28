@@ -1,0 +1,467 @@
+/* Traza Segura: estilo editorial y sobrio. Papel cálido, tinta azul oscuro, líneas finas en vez de
+   sombras y un solo acento amarillo reservado para el logo. El mapa base es claro, así que por ahora
+   la interfaz también (el modo oscuro llega con la Fase 6). */
+
+:root {
+  color-scheme: light;
+  --papel: #fbfaf7;
+  --tinta: #14213d;
+  --texto: #1f2430;
+  --texto-suave: #5b5f69;
+  --linea: #e4e1d9;
+  --linea-fuerte: #cfcbc1;
+  --ancho-hoja: 380px;
+  --serif: "Fraunces Variable", Georgia, "Times New Roman", serif;
+  --sans: "IBM Plex Sans Variable", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-family: var(--sans);
+  font-size: 16px;
+  color: var(--texto);
+  -webkit-font-smoothing: antialiased;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: var(--papel);
+}
+
+a {
+  color: var(--tinta);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+:focus-visible {
+  outline: 2px solid var(--tinta);
+  outline-offset: 2px;
+}
+
+.solo-lectores {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ---------------------------------------------------------------- Mapa */
+
+#mapa {
+  position: fixed;
+  inset: 0 0 0 var(--ancho-hoja);
+}
+
+.maplibregl-ctrl-group {
+  border: 1px solid var(--linea-fuerte);
+  border-radius: 8px;
+  box-shadow: none !important;
+  overflow: hidden;
+}
+
+.maplibregl-ctrl-attrib {
+  font-family: var(--sans);
+  font-size: 11px;
+}
+
+/* ---------------------------------------------------------------- Hoja (panel) */
+
+.hoja {
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: var(--ancho-hoja);
+  overflow-y: auto;
+  padding: 28px 28px 24px;
+  background: var(--papel);
+  border-right: 1px solid var(--linea);
+  z-index: 2;
+}
+
+.asa {
+  display: none;
+}
+
+.marca {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo {
+  width: 40px;
+  height: 40px;
+  flex: none;
+}
+
+.nombre {
+  margin: 0;
+  font-family: var(--serif);
+  font-weight: 620;
+  font-size: 1.45rem;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  color: var(--tinta);
+}
+
+.lugar {
+  margin: 3px 0 0;
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--texto-suave);
+}
+
+.lema {
+  margin: 28px 0 8px;
+  font-family: var(--serif);
+  font-size: 1.55rem;
+  font-weight: 420;
+  line-height: 1.22;
+  letter-spacing: -0.01em;
+  color: var(--tinta);
+}
+
+.bloque {
+  margin-top: 26px;
+}
+
+.rotulo {
+  margin: 0 0 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--linea);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--texto-suave);
+}
+
+.titulo {
+  margin: 0;
+  font-size: 1.02rem;
+  font-weight: 600;
+  color: var(--texto);
+}
+
+.medida {
+  margin: 2px 0 14px;
+  font-size: 0.85rem;
+  color: var(--texto-suave);
+}
+
+.bloque p {
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.cargando {
+  margin: 0;
+  color: var(--texto-suave);
+}
+
+/* ---------------------------------------------------------------- Escala */
+
+.escala-barra {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 20px;
+}
+
+.escala-tramo {
+  flex: 1;
+  height: 12px;
+  transition: height 120ms ease;
+}
+
+.escala-tramo:first-child {
+  border-radius: 4px 0 0 4px;
+}
+
+.escala-tramo:last-child {
+  border-radius: 0 4px 4px 0;
+}
+
+/* El nivel del sector señalado crece, sin recuadros. */
+.escala-tramo.activo {
+  height: 20px;
+  border-radius: 3px;
+}
+
+.escala-valores {
+  display: grid;
+  grid-template-columns: repeat(var(--clases, 5), 1fr);
+  margin-top: 2px;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--texto);
+}
+
+.escala-valores span {
+  transform: translateX(-50%);
+  justify-self: start;
+}
+
+.escala-extremos {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+  font-size: 0.7rem;
+  color: var(--texto-suave);
+}
+
+/* ---------------------------------------------------------------- Cifras, avance y pie */
+
+.cifras {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin: 26px 0 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--linea);
+}
+
+.cifras dt {
+  font-size: 0.72rem;
+  color: var(--texto-suave);
+}
+
+.cifras dd {
+  margin: 2px 0 0;
+  font-family: var(--serif);
+  font-size: 1.7rem;
+  font-weight: 500;
+  font-variant-numeric: lining-nums tabular-nums;
+  color: var(--tinta);
+}
+
+.avance {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 0.9rem;
+}
+
+.avance li {
+  position: relative;
+  padding: 5px 0 5px 24px;
+  color: var(--texto-suave);
+}
+
+.avance li::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: 50%;
+  width: 11px;
+  height: 11px;
+  margin-top: -5.5px;
+  border: 1.5px solid var(--linea-fuerte);
+  border-radius: 50%;
+}
+
+.avance li.hecho {
+  color: var(--texto);
+}
+
+.avance li.hecho::before {
+  border-color: var(--tinta);
+  background: var(--tinta);
+  box-shadow: inset 0 0 0 2px var(--papel);
+}
+
+.pie {
+  margin-top: 30px;
+  padding-top: 12px;
+  border-top: 1px solid var(--linea);
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--texto-suave);
+}
+
+.pie p {
+  margin: 0 0 6px;
+}
+
+.enlaces {
+  display: flex;
+  gap: 16px;
+  margin-top: 10px !important;
+  font-size: 0.8rem;
+}
+
+/* ---------------------------------------------------------------- Ficha de un sector */
+
+.ficha {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 3;
+  width: 250px;
+  padding: 12px 14px;
+  background: var(--papel);
+  border: 1px solid var(--linea-fuerte);
+  border-radius: 10px;
+  box-shadow: 0 6px 18px rgb(20 33 61 / 0.12);
+  pointer-events: none;
+}
+
+.ficha[hidden] {
+  display: none;
+}
+
+.ficha p {
+  margin: 0;
+}
+
+.ficha-rotulo {
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--texto-suave);
+}
+
+.ficha-nombre {
+  margin: 2px 0 8px !important;
+  font-family: var(--serif);
+  font-size: 1.15rem;
+  font-weight: 560;
+  line-height: 1.2;
+  color: var(--tinta);
+}
+
+.ficha-cifras {
+  font-size: 0.85rem;
+  color: var(--texto-suave);
+  font-variant-numeric: tabular-nums;
+}
+
+.ficha-cifras strong {
+  font-weight: 600;
+  color: var(--texto);
+}
+
+.ficha-nivel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px !important;
+  padding-top: 8px;
+  border-top: 1px solid var(--linea);
+  font-size: 0.78rem;
+  color: var(--texto-suave);
+}
+
+.ficha-muestra {
+  width: 18px;
+  height: 10px;
+  border-radius: 3px;
+  opacity: 0.72;
+  flex: none;
+}
+
+.sin-js {
+  position: fixed;
+  inset: auto 16px 16px;
+  padding: 12px;
+  background: var(--papel);
+  border: 1px solid var(--linea-fuerte);
+}
+
+/* ---------------------------------------------------------------- Celular: la hoja asoma abajo */
+
+@media (max-width: 720px) {
+  #mapa {
+    inset: 0;
+  }
+
+  .hoja {
+    inset: auto 0 0 0;
+    width: auto;
+    max-height: 86dvh;
+    padding: 0 20px 20px;
+    border-right: 0;
+    border-top: 1px solid var(--linea-fuerte);
+    border-radius: 18px 18px 0 0;
+    box-shadow: 0 -8px 24px rgb(20 33 61 / 0.1);
+    overflow: hidden;
+    transform: translateY(calc(100% - var(--asomar, 230px)));
+    transition: transform 280ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  .hoja.abierta {
+    transform: none;
+    overflow-y: auto;
+  }
+
+  .asa {
+    display: block;
+    position: sticky;
+    top: 0;
+    width: calc(100% + 40px);
+    margin: 0 -20px 4px;
+    padding: 10px 0 12px;
+    border: 0;
+    background: var(--papel);
+    cursor: pointer;
+    z-index: 1;
+  }
+
+  .asa-barra {
+    display: block;
+    width: 40px;
+    height: 4px;
+    margin: 0 auto;
+    border-radius: 2px;
+    background: var(--linea-fuerte);
+  }
+
+  .logo {
+    width: 32px;
+    height: 32px;
+  }
+
+  .nombre {
+    font-size: 1.2rem;
+  }
+
+  .lema {
+    display: none;
+  }
+
+  .resumen {
+    margin-top: 16px;
+  }
+
+  .resumen .rotulo {
+    display: none;
+  }
+
+  .maplibregl-ctrl-bottom-right {
+    bottom: var(--asomar, 230px);
+  }
+
+  .ficha.anclada {
+    top: 12px;
+    left: 12px;
+    right: 56px;
+    width: auto;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hoja,
+  .escala-tramo {
+    transition: none;
+  }
+}

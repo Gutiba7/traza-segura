@@ -1,0 +1,24 @@
+# Comprueba con los datos oficiales los supuestos del modelo de riesgo (ver docs/metodologia.md).
+# Solo lee información pública; no guarda ni modifica nada en el repositorio.
+name: Validar supuestos del modelo
+
+on:
+  push:
+    branches: ["claude/**"]
+    paths:
+      - "pipeline/validar_supuestos.py"
+      - "pipeline/explorar_fuentes.py"
+      - ".github/workflows/validar-supuestos.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validar supuestos
+        run: python3 pipeline/validar_supuestos.py
