@@ -89,7 +89,7 @@ def cargar_sectores():
             casos[tipo].append(total)
     anios_equivalentes = sum(fraccion * peso for _, _, fraccion, peso in periodos)
     texto_periodo = f"{anio - ANIOS_COMPLETOS} a {list(MESES)[meses - 1]}. de {anio}"
-    return coleccion, geometrias, casos, anios_equivalentes, texto_periodo
+    return coleccion, geometrias, casos, anios_equivalentes, texto_periodo, anio - 1
 
 
 def vecinos_de(geometrias):
@@ -107,7 +107,9 @@ def descargar_grafo(poligono, modo):
     ox.settings.log_console = True
     grafo = ox.graph_from_polygon(poligono, network_type=MODOS[modo]["red"], simplify=True,
                                   retain_all=False, truncate_by_edge=True)
-    if modo == "carro":
+    # En bici y en carro se respetan los sentidos viales: se deja solo la parte de la red donde
+    # se puede ir y volver entre cualquier par de esquinas (así toda ruta pedida tiene respuesta).
+    if modo in ("bici", "carro"):
         grafo = ox.truncate.largest_component(grafo, strongly=True)
     return grafo
 
@@ -235,7 +237,7 @@ def poligono_urbano(geometrias):
 if __name__ == "__main__":
     carpeta = sys.argv[1] if len(sys.argv) > 1 else os.path.join("web", "public", "data")
     os.makedirs(carpeta, exist_ok=True)
-    coleccion, geometrias, casos, anios_eq, periodo = cargar_sectores()
+    coleccion, geometrias, casos, anios_eq, periodo, anio_completo = cargar_sectores()
     poligono = poligono_urbano(geometrias)
     grafos = {modo: descargar_grafo(poligono, modo) for modo in MODOS}
     archivos, coleccion, estadisticas = construir(coleccion, geometrias, casos, anios_eq, grafos)
@@ -249,6 +251,7 @@ if __name__ == "__main__":
         json.dump({
             "generado": datetime.now(timezone.utc).isoformat(timespec="seconds"),
             "periodo": periodo,
+            "anio": anio_completo,  # año de las cifras de hurtos de cada sector
             "conjunto": "Incidente Reportado (llamadas a la Línea 123) por sector catastral",
             "fuente": FUENTE,
             "pesos": PESOS_MODO,

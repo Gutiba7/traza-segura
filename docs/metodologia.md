@@ -32,6 +32,12 @@ $$c_e = t_e\,(1 + \alpha \cdot RR_e) \;=\; \underbrace{t_e}_{\text{tiempo}} + \a
   el mejor resultado (Hart, Nilsson y Raphael, 1968).
 - **"% de riesgo evitado"** = 1 − (Σ RR·t de la ruta segura) / (Σ RR·t de la ruta rápida): cuánto
   se reduce la exposición esperada.
+- **Valores de α en la app**, calibrados con trayectos reales a pie por el centro: *Poco* = 0,3;
+  *Moderado* = 0,75 (por defecto); *Bastante* = 1,5. Con *Moderado*, un minuto por una calle con
+  RR = 2 cuenta como 2,5 minutos. En las pruebas, *Moderado* solo acepta desvíos de hasta ~30 % del
+  tiempo cuando la exposición baja ~40 %; por ejemplo, del Museo Nacional al Parque de los
+  Periodistas: 6 % más de tiempo y 36 % menos exposición. Con α = 1, el valor inicial, llegaba a
+  proponer desvíos de 50 % del tiempo, demasiado para un uso diario.
 
 > **Corrección al plan original:** el PLAN decía normalizar el riesgo a una escala 0–1 por
 > percentiles. Eso ordena los tramos, pero **sumar percentiles no tiene significado matemático**:
